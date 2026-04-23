@@ -1,0 +1,54 @@
+---
+title: "Getting started with partyscape"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Getting started with partyscape}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(collapse = TRUE, comment = "#>",
+                      fig.width = 6, fig.height = 4)
+```
+
+```{r setup}
+library(partyscape)
+```
+
+## One composition at a time
+
+A composition is any numeric vector of non-negative shares summing
+(roughly) to 1; raw seat counts are accepted — they are renormalized with
+a warning.
+
+```{r}
+p <- c(0.45, 0.30, 0.15, 0.10)
+hill_number(p, c(0, 1, 2, Inf))
+enp(p); dominance_gap(p); top_two(p)
+```
+
+`diversity_profile()` sweeps q over a grid.
+
+```{r}
+dp <- diversity_profile(p)
+plot(dp)
+```
+
+## Several compositions at once
+
+Rows of a matrix are treated as separate systems:
+
+```{r}
+m <- rbind(a = c(0.4, 0.3, 0.2, 0.1),
+           b = c(0.6, 0.2, 0.1, 0.1),
+           c = c(0.3, 0.3, 0.2, 0.2))
+plot(diversity_profile(m))
+plot(evenness_profile(m))
+```
+
+## What to read next
+
+- `vignette("crossings")` — when ENP isn't enough.
+- `vignette("beta")` — alpha-beta-gamma over time.
+- `vignette("parlgov")` — end-to-end with live ParlGov data.

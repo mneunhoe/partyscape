@@ -1,4 +1,17 @@
+---
+output: github_document
+---
+
 <!-- README.md is generated from README.Rmd. Please edit that file. -->
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment  = "#>",
+  fig.path = "man/figures/README-",
+  out.width = "100%"
+)
+```
 
 # partyscape
 
@@ -8,21 +21,21 @@ Neunhoeffer (forthcoming) on a small, tidyverse-free footprint.
 
 ## Installation
 
-``` r
+```r
 # install.packages("remotes")
 remotes::install_github("mneunhoe/partyscape")
 ```
 
 ## A 20-line tour
 
-``` r
+```{r demo, fig.show = "hold"}
 library(partyscape)
 
 # Two hypothetical systems with the same ENP but different structure.
 a <- c(0.55, 0.15, 0.10, 0.08, 0.05, 0.04, 0.03)   # many small parties
 b <- c(0.40, 0.30, 0.30)                           # three large parties
 
-# 1. Diversity profile: D(q) from q = 0 (richness) to q = Inf.
+# 1. Diversity profile: D(q) from q = 0 (richness) to q = Inf (inverse of max).
 dp <- diversity_profile(rbind(a = a, b = b))
 dp
 
@@ -36,18 +49,3 @@ history <- rbind(c(0.50, 0.30, 0.15, 0.05),
                  c(0.35, 0.30, 0.20, 0.15))
 alpha_beta_gamma(history, q = c(0, 1, 2, 5))
 ```
-
-## What the package provides
-
-- **Pillar 1 — diversity profiles:** `hill_number()`,
-  `diversity_profile()`, `evenness_profile()`.
-- **Pillar 2 — profile crossings:** `crossings()` (linear-interpolation
-  or sign-change detector).
-- **Pillar 3 — beta diversity:** `alpha_beta_gamma()`,
-  `collapse_to_elections()`.
-- **Scalar summaries:** `hhi()`, `rae()`, `enp()`, `dominance_gap()`,
-  `top_two()`.
-- **Null model:** `taagepera_allik_shares()`.
-- **ParlGov accessors:** `fetch_parlgov()`, `parlgov_seat_shares()`.
-- **Plotting:** `autoplot()` / `plot()` methods for every S3 class,
-  plus a `partyscape_palette()` helper.

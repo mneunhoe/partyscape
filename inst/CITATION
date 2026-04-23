@@ -1,0 +1,15 @@
+citHeader("To cite partyscape in publications:")
+
+bibentry(
+  bibtype  = "Manual",
+  title    = "partyscape: Diversity Profiles, Crossings, and Beta Diversity for Party Systems",
+  author   = person("Marcel", "Neunhoeffer"),
+  year     = format(Sys.Date(), "%Y"),
+  note     = sprintf("R package version %s", meta$Version),
+  url      = "https://github.com/mneunhoe/partyscape"
+)
+
+citFooter(
+  "When using ParlGov access via fetch_parlgov() or parlgov_seat_shares(), ",
+  "also cite Döring & Manow (2024), Harvard Dataverse, DOI: 10.7910/DVN/2VZ5ZC."
+)

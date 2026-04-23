@@ -1,0 +1,39 @@
+Package: partyscape
+Title: Diversity Profiles, Crossings, and Beta Diversity for Party Systems
+Version: 0.1.0
+Authors@R: person(
+    given = "Marcel",
+    family = "Neunhoeffer",
+    role = c("aut", "cre"),
+    email = "marcel@marcel-neunhoeffer.com")
+Description: Three analytical tools for describing party-system
+    fragmentation from compositions of seat or vote shares: diversity
+    profiles (Hill numbers over an order-'q' grid), profile crossings
+    (structural incomparability between two systems), and multiplicative
+    beta diversity (Jost 2007) for change over time. Implements the
+    measures proposed in the accompanying paper without depending on
+    tidyverse or ecology packages. Includes a small accessor layer for
+    ParlGov election data.
+License: MIT + file LICENSE
+Encoding: UTF-8
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 7.3.3
+Depends:
+    R (>= 4.0)
+Imports:
+    ggplot2,
+    stats,
+    utils,
+    tools
+Suggests:
+    testthat (>= 3.0.0),
+    knitr,
+    rmarkdown,
+    vdiffr,
+    curl,
+    readr,
+    tibble
+Config/testthat/edition: 3
+URL: https://github.com/mneunhoe/partyscape
+BugReports: https://github.com/mneunhoe/partyscape/issues
+VignetteBuilder: knitr

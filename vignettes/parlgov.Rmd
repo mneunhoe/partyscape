@@ -1,0 +1,71 @@
+---
+title: "End-to-end with ParlGov data"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{End-to-end with ParlGov data}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+has_net <- requireNamespace("curl", quietly = TRUE) &&
+  isTRUE(tryCatch(curl::has_internet(), error = function(e) FALSE))
+knitr::opts_chunk$set(collapse = TRUE, comment = "#>",
+                      fig.width = 6, fig.height = 4,
+                      eval = has_net)
+```
+
+```{r setup}
+library(partyscape)
+```
+
+This vignette walks through the full pipeline on live
+[ParlGov](https://www.parlgov.org/) data. On first run it downloads the
+current `view_election` CSV and caches it in
+`tools::R_user_dir("partyscape", "cache")`.
+
+```{r fetch}
+pg <- fetch_parlgov()
+head(pg[, c("country", "date", "party", "seats")])
+```
+
+## Reshape to a seat-share matrix
+
+```{r reshape}
+shares <- parlgov_seat_shares(pg,
+                              countries = c("Netherlands", "Sweden"),
+                              years     = 1960:2020,
+                              type      = "parliament")
+dim(shares)
+```
+
+## Pillar 1 — diversity profiles for a handful of elections
+
+```{r profile}
+pick <- c("Netherlands_1982", "Sweden_2002")
+plot(diversity_profile(shares[rownames(shares) %in% pick, , drop = FALSE]))
+```
+
+## Pillar 2 — crossings between the two pick elections
+
+```{r crossings}
+cr <- crossings(shares["Netherlands_1982", ],
+                shares["Sweden_2002", ],
+                q = seq(0, 5, 0.01))
+cr
+plot(cr)
+```
+
+## Pillar 3 — beta diversity of one country's trajectory
+
+```{r beta}
+nl <- shares[attr(shares, "country") == "Netherlands", , drop = FALSE]
+yr <- attr(shares, "year")[attr(shares, "country") == "Netherlands"]
+plot(alpha_beta_gamma(nl, q = c(0, 1, 2, 5), years = yr))
+```
+
+## Citation
+
+If you use ParlGov data, please cite Döring & Manow (2024), Harvard
+Dataverse, DOI
+[10.7910/DVN/2VZ5ZC](https://doi.org/10.7910/DVN/2VZ5ZC).

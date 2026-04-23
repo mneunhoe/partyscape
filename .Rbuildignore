@@ -1,0 +1,10 @@
+^.*\.Rproj$
+^\.Rproj\.user$
+^LICENSE\.md$
+^README\.Rmd$
+^data-raw$
+^\.github$
+^cran-comments\.md$
+^NEWS\.md$
+^\.vscode$
+^\.DS_Store$

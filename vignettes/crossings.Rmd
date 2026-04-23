@@ -1,0 +1,43 @@
+---
+title: "Profile crossings: when ENP isn't enough"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Profile crossings: when ENP isn't enough}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(collapse = TRUE, comment = "#>",
+                      fig.width = 6, fig.height = 4)
+```
+
+```{r setup}
+library(partyscape)
+```
+
+Two party systems can share an effective-number-of-parties value and yet
+look nothing alike at the ends of the profile. `crossings()` detects the
+q values where one system overtakes the other.
+
+```{r}
+a <- c(0.55, 0.15, 0.10, 0.08, 0.05, 0.04, 0.03)
+b <- c(0.40, 0.30, 0.30)
+c(enp_a = enp(a), enp_b = enp(b))
+
+cr <- crossings(a, b, q = seq(0, 5, 0.01))
+cr
+plot(cr)
+```
+
+## Dataset-wide scans
+
+For large comparisons, `method = "signchange"` is cheap and robust:
+
+```{r}
+set.seed(1)
+many <- t(replicate(8, { x <- rgamma(5, 0.8); x / sum(x) }))
+rownames(many) <- paste0("sys", 1:8)
+cr_all <- crossings(many, q = seq(0, 5, 0.01), method = "signchange")
+head(as.data.frame(cr_all))
+```
