@@ -1,0 +1,92 @@
+url: https://mneunhoe.github.io/partyscape
+
+template:
+  bootstrap: 5
+  bslib:
+    primary: "#2C3E50"
+    base_font: {google: "Inter"}
+    heading_font: {google: "Inter"}
+    code_font: {google: "JetBrains Mono"}
+
+home:
+  title: Diversity Profiles, Crossings, and Beta Diversity for Party Systems
+  description: >
+    Hill-number diversity profiles, profile crossings, and multiplicative
+    alpha-beta-gamma decomposition for party-labeled compositions.
+  sidebar:
+    structure: [links, license, community, citation, authors, dev]
+
+navbar:
+  structure:
+    left:  [intro, reference, articles, news]
+    right: [search, github]
+
+articles:
+- title: Get started
+  navbar: ~
+  contents:
+  - partyscape
+- title: Core workflows
+  navbar: Core workflows
+  contents:
+  - crossings
+  - beta
+  - parlgov
+- title: Paper replication
+  navbar: Paper replication
+  contents:
+  - replication
+
+reference:
+- title: Diversity profiles
+  desc: Hill numbers and full profiles D(q) / E(q) over a q grid.
+  contents:
+  - hill_number
+  - diversity_profile
+  - evenness_profile
+  - "`[.diversity_profile`"
+- title: Profile crossings
+  desc: Detect q values where two profiles change order.
+  contents:
+  - crossings
+- title: Alpha-beta-gamma decomposition
+  desc: Multiplicative diversity decomposition (Jost 2007) over time.
+  contents:
+  - alpha_beta_gamma
+  - collapse_to_elections
+- title: Scalar summaries
+  desc: Classic concentration and fractionalization indices.
+  contents:
+  - enp
+  - effective_parties
+  - hhi
+  - rae
+  - dominance_gap
+  - top_two
+- title: Input coercion and reshaping
+  desc: Get arbitrary inputs into a normalized composition matrix.
+  contents:
+  - as_composition
+  - pivot_to_wide
+  - taagepera_allik_shares
+- title: ParlGov data access
+  desc: Fetch and reshape ParlGov election results.
+  contents:
+  - fetch_parlgov
+  - parlgov_seat_shares
+- title: Plotting helpers
+  desc: Palette and S3 autoplot/plot methods used to visualise results.
+  contents:
+  - partyscape_palette
+  - partyscape-autoplot
+  - plot.diversity_profile
+  - plot.evenness_profile
+  - plot.crossings
+  - plot.beta_diversity
+
+authors:
+  Marcel Neunhoeffer:
+    href: https://www.marcel-neunhoeffer.com
+
+development:
+  mode: auto

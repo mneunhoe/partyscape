@@ -29,6 +29,23 @@ pg <- fetch_parlgov()
 head(pg[, c("country", "date", "party", "seats")])
 ```
 
+```{r normalize-country, include = FALSE}
+# ParlGov's view_election currently returns 3-letter ISO codes in
+# `country`. Normalize to full names so downstream filters and the
+# `country_year` rownames stay human-readable.
+iso_to_name <- c(AUT = "Austria", BEL = "Belgium", DNK = "Denmark",
+                 FIN = "Finland", FRA = "France", DEU = "Germany",
+                 GRC = "Greece",  ISL = "Iceland", IRL = "Ireland",
+                 ITA = "Italy",   LUX = "Luxembourg",
+                 NLD = "Netherlands", NOR = "Norway", PRT = "Portugal",
+                 ESP = "Spain",   SWE = "Sweden",
+                 GBR = "United Kingdom")
+if (all(nchar(unique(pg$country)) == 3L)) {
+  pg$country <- unname(iso_to_name[pg$country])
+  pg <- pg[!is.na(pg$country), ]
+}
+```
+
 ## Reshape to a seat-share matrix
 
 `parlgov_seat_shares()` produces a **party-labeled** matrix: one column
