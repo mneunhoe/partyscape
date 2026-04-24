@@ -15,12 +15,15 @@
 #' @seealso [diversity_profile()], [enp()], [hhi()].
 #' @export
 #' @examples
-#' p <- c(0.4, 0.3, 0.2, 0.1)
-#' hill_number(p, 0)      # 4 nonzero parties
-#' hill_number(p, 1)      # exp(Shannon)
-#' hill_number(p, 2)      # ENP = 1 / sum(p^2)
-#' hill_number(p, Inf)    # 1 / max(p)
-#' hill_number(p, c(0, 1, 2, Inf))
+#' # Party-labeled composition — column order carries party identity,
+#' # NOT rank. The largest party is whichever entry is largest.
+#' germany_2009 <- c(CDU = 0.312, CSU = 0.072, SPD = 0.235,
+#'                   FDP = 0.150, Gruene = 0.109, Linke = 0.122)
+#' hill_number(germany_2009, 0)      # 6 nonzero parties
+#' hill_number(germany_2009, 1)      # exp(Shannon)
+#' hill_number(germany_2009, 2)      # ENP = 1 / sum(p^2)
+#' hill_number(germany_2009, Inf)    # 1 / max(p)
+#' hill_number(germany_2009, c(0, 1, 2, Inf))
 hill_number <- function(p, q) {
   p <- as.numeric(p)
   p <- p[p > 0]
@@ -59,8 +62,10 @@ hill_one <- function(p, q) {
 #'   `n_parties`, and `wide` (the id-by-q matrix).
 #' @export
 #' @examples
-#' p <- c(0.4, 0.3, 0.2, 0.1)
-#' dp <- diversity_profile(p)
+#' # Party-labeled shares (order is party identity, not size).
+#' germany_2009 <- c(CDU = 0.312, CSU = 0.072, SPD = 0.235,
+#'                   FDP = 0.150, Gruene = 0.109, Linke = 0.122)
+#' dp <- diversity_profile(germany_2009)
 #' print(dp)
 #' plot(dp)
 diversity_profile <- function(x,

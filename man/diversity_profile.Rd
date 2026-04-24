@@ -34,8 +34,10 @@ or many compositions. Returns an S3 object suitable for \code{\link[ggplot2:auto
 \code{\link[=plot]{plot()}}, and subset extraction via \code{[}.
 }
 \examples{
-p <- c(0.4, 0.3, 0.2, 0.1)
-dp <- diversity_profile(p)
+# Party-labeled shares (order is party identity, not size).
+germany_2009 <- c(CDU = 0.312, CSU = 0.072, SPD = 0.235,
+                  FDP = 0.150, Gruene = 0.109, Linke = 0.122)
+dp <- diversity_profile(germany_2009)
 print(dp)
 plot(dp)
 }

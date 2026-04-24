@@ -13,7 +13,7 @@ knitr::opts_chunk$set(
 )
 ```
 
-# partyscape
+# partyscape <img src="man/figures/logo.png" align="right" height="138" alt="partyscape hex logo" />
 
 Diversity profiles, profile crossings, and beta diversity for
 party-system research. Implements the three analytical tools proposed in
@@ -28,24 +28,47 @@ remotes::install_github("mneunhoe/partyscape")
 
 ## A 20-line tour
 
+All examples below work on **party-labeled** compositions — columns
+carry party identity, never rank. The paper's central point is that
+sorting shares by size (so "column 1 = largest party that year")
+discards the information `alpha_beta_gamma()` is designed to detect, so
+the package encourages you to keep party identity intact.
+
 ```{r demo, fig.show = "hold"}
 library(partyscape)
 
-# Two hypothetical systems with the same ENP but different structure.
-a <- c(0.55, 0.15, 0.10, 0.08, 0.05, 0.04, 0.03)   # many small parties
-b <- c(0.40, 0.30, 0.30)                           # three large parties
+# Germany 2009 Bundestag — columns named by party, not sorted by size.
+germany_2009 <- c(
+  CDU   = 0.312, CSU   = 0.072, SPD   = 0.235,
+  FDP   = 0.150, Gruene = 0.109, Linke = 0.122
+)
 
-# 1. Diversity profile: D(q) from q = 0 (richness) to q = Inf (inverse of max).
-dp <- diversity_profile(rbind(a = a, b = b))
-dp
+# UK 1997 Commons — a different party set, also named (not sorted).
+uk_1997 <- c(
+  Labour       = 0.634, Conservative = 0.250, LibDem   = 0.070,
+  UUP          = 0.015, SNP          = 0.009, PlaidCymru = 0.006,
+  SDLP         = 0.005, DUP          = 0.003, SinnFein = 0.003,
+  Independent  = 0.005
+)
 
-# 2. Profile crossings: where does one system overtake the other?
-cr <- crossings(a, b, q = seq(0, 5, 0.01))
-cr
+# 1. Diversity profile: a steep UK curve vs. a flat German one.
+diversity_profile(uk_1997)
+diversity_profile(germany_2009)
 
-# 3. Beta diversity across a country's election history.
-history <- rbind(c(0.50, 0.30, 0.15, 0.05),
-                 c(0.45, 0.30, 0.15, 0.10),
-                 c(0.35, 0.30, 0.20, 0.15))
-alpha_beta_gamma(history, q = c(0, 1, 2, 5))
+# 2. Profile crossings across two systems.
+crossings(uk_1997, germany_2009, q = seq(0, 5, 0.01))
+
+# 3. Beta diversity across Germany's 2002-2005-2009 trajectory. Columns
+# share the same party slots across rows so CDU/SPD swapping as the
+# largest party between 2002 and 2005 is visible to the decomposition.
+germany <- rbind(
+  `2002` = c(CDU = 0.315, CSU = 0.096, SPD = 0.416,
+             FDP = 0.078, Gruene = 0.091, Linke = 0.003),
+  `2005` = c(CDU = 0.293, CSU = 0.075, SPD = 0.362,
+             FDP = 0.099, Gruene = 0.083, Linke = 0.088),
+  `2009` = c(CDU = 0.312, CSU = 0.072, SPD = 0.235,
+             FDP = 0.150, Gruene = 0.109, Linke = 0.122)
+)
+alpha_beta_gamma(germany, q = c(0, 1, 2, 5),
+                 years = c(2002, 2005, 2009))
 ```

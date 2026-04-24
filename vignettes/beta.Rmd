@@ -1,5 +1,5 @@
 ---
-title: "Alpha–beta–gamma diversity over time"
+title: "Alpha-beta-gamma diversity over time"
 output: rmarkdown::html_vignette
 vignette: >
   %\VignetteIndexEntry{Alpha--beta--gamma diversity over time}
@@ -21,34 +21,82 @@ compositions is this trajectory equivalent to?" A country whose seat
 shares drift gently has beta near 1; a country with genuinely different
 elections has beta approaching T.
 
-## Stable country
+**Columns must carry party identity, not rank.** Row-sorting shares by
+size ("column 1 = largest party that year") destroys the information
+beta is designed to detect — when two parties swap positions, the
+sorted representation records stability while actual identity changed.
+Every example below uses named, non-sorted columns.
 
-```{r}
-stable <- rbind(c(0.45, 0.30, 0.15, 0.10),
-                c(0.44, 0.31, 0.14, 0.11),
-                c(0.46, 0.29, 0.16, 0.09))
-alpha_beta_gamma(stable, q = c(0, 1, 2, 5))
+## A stable country — Austria after 1970
+
+Two parties dominate (SPÖ, ÖVP) with steady shares across three
+decades. β should sit near 1 at every q.
+
+```{r austria}
+austria <- rbind(
+  `1986` = c(SPOE = 0.437, OEVP = 0.421, FPOE = 0.098, Gruene = 0.044),
+  `1990` = c(SPOE = 0.437, OEVP = 0.328, FPOE = 0.180, Gruene = 0.055),
+  `1994` = c(SPOE = 0.355, OEVP = 0.284, FPOE = 0.235, Gruene = 0.071),
+  `1995` = c(SPOE = 0.388, OEVP = 0.350, FPOE = 0.224, Gruene = 0.049)
+)
+alpha_beta_gamma(austria, q = c(0, 1, 2, 5),
+                 years = c(1986, 1990, 1994, 1995))
 ```
 
-## Churning country
+## A churning country — Germany 2002-2005-2009
 
-```{r}
-churn <- rbind(c(0.60, 0.20, 0.15, 0.05),
-               c(0.30, 0.30, 0.25, 0.15),
-               c(0.15, 0.25, 0.35, 0.25))
-bd <- alpha_beta_gamma(churn, q = c(0, 1, 2, 5))
+Between 2002 and 2005 SPD and CDU/CSU swap as the largest party. Column
+order stays constant (this is what keeps identity); only the entries
+move. β₂ captures the swap.
+
+```{r germany}
+germany <- rbind(
+  `2002` = c(CDU = 0.315, CSU = 0.096, SPD = 0.416,
+             FDP = 0.078, Gruene = 0.091, Linke = 0.003),
+  `2005` = c(CDU = 0.293, CSU = 0.075, SPD = 0.362,
+             FDP = 0.099, Gruene = 0.083, Linke = 0.088),
+  `2009` = c(CDU = 0.312, CSU = 0.072, SPD = 0.235,
+             FDP = 0.150, Gruene = 0.109, Linke = 0.122)
+)
+bd <- alpha_beta_gamma(germany, q = c(0, 1, 2, 5),
+                       years = c(2002, 2005, 2009))
 bd
 plot(bd)
 ```
 
+## What sorting would hide
+
+To make the paper's "sorting hides identity" point concrete: sort each
+row descending, then rerun the decomposition. β collapses toward 1
+because the pooled composition now averages "the k-th largest slot"
+across rows, not "the share of party X."
+
+```{r sorted-contrast}
+germany_sorted <- t(apply(germany, 1, sort, decreasing = TRUE))
+colnames(germany_sorted) <- paste0("Rank_", seq_len(ncol(germany_sorted)))
+alpha_beta_gamma(germany_sorted, q = c(0, 1, 2, 5),
+                 years = c(2002, 2005, 2009))
+```
+
+The unsorted β at q = 2 exceeds the sorted one — exactly the
+`β_unsorted ≥ β_sorted` inequality the paper proves.
+
 ## Collapsing to elections
 
 When consecutive country-years repeat the same composition between
-elections, pass `years` to weight by term length:
+elections, pass `years` to weight by term length. `alpha_beta_gamma()`
+auto-collapses via `collapse_to_elections()`.
 
-```{r}
-history <- rbind(c(0.45, 0.30, 0.15, 0.10),   # 2000
-                 c(0.45, 0.30, 0.15, 0.10),   # 2001 — same
-                 c(0.40, 0.30, 0.20, 0.10))   # 2002 — new
-alpha_beta_gamma(history, q = 2, years = c(2000, 2001, 2002))
+```{r collapse}
+germany_annual <- rbind(
+  `2002` = germany["2002", ],
+  `2003` = germany["2002", ],   # same composition
+  `2004` = germany["2002", ],   # same composition
+  `2005` = germany["2005", ],
+  `2006` = germany["2005", ],
+  `2007` = germany["2005", ],
+  `2008` = germany["2005", ],
+  `2009` = germany["2009", ]
+)
+alpha_beta_gamma(germany_annual, q = 2, years = 2002:2009)
 ```

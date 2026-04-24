@@ -103,6 +103,12 @@ parlgov_seat_shares <- function(parlgov,
     df <- df[df$share >= min_share, , drop = FALSE]
   }
 
+  if (nrow(df) == 0L) {
+    stop("parlgov_seat_shares(): no rows left after filtering. ",
+         "Check that `countries`, `years`, and `type` match the data.",
+         call. = FALSE)
+  }
+
   # Party labels must be unique per election but can repeat across countries.
   wide <- pivot_to_wide(df, id = "country_year",
                         party = "party", share = "share")

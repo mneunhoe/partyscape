@@ -1,0 +1,824 @@
+---
+title: "Replicating the paper with partyscape"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Replicating the paper with partyscape}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r chunk-defaults, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment  = "#>",
+  fig.width  = 7,
+  fig.height = 4.5,
+  dpi = 110
+)
+```
+
+```{r locate-data, include = FALSE}
+# Magyar's seat-share CSV (Harvard Dataverse DOI 10.7910/DVN/Q0OIMY).
+# Point PARTYSCAPE_MAGYAR_CSV at it, or drop it in one of the candidate
+# paths. All knitted chunks are gated on its presence.
+magyar_candidates <- c(
+  Sys.getenv("PARTYSCAPE_MAGYAR_CSV"),
+  "../data/party_seat_share_datafile_replication.csv",
+  file.path(tools::R_user_dir("partyscape", "data"),
+            "party_seat_share_datafile_replication.csv"),
+  "/Users/marcelneunhoeffer/Dropbox/Apps/Overleaf/PA_PCA_new/data/party_seat_share_datafile_replication.csv"
+)
+magyar_candidates <- Filter(function(p) nzchar(p) && file.exists(p),
+                            magyar_candidates)
+magyar_csv  <- if (length(magyar_candidates)) magyar_candidates[1] else NA_character_
+has_magyar  <- !is.na(magyar_csv)
+
+# ParlGov CSV. If PARTYSCAPE_PARLGOV_CSV is set, or the replication-repo
+# CSV exists, seed the package cache with it so `fetch_parlgov()` reads
+# the local copy instead of hitting the network.
+parlgov_candidates <- c(
+  Sys.getenv("PARTYSCAPE_PARLGOV_CSV"),
+  "../data/parlgov_elections.csv",
+  "/Users/marcelneunhoeffer/Dropbox/Apps/Overleaf/PA_PCA_new/data/parlgov_elections.csv"
+)
+parlgov_candidates <- Filter(function(p) nzchar(p) && file.exists(p),
+                             parlgov_candidates)
+parlgov_local <- if (length(parlgov_candidates)) parlgov_candidates[1] else NA_character_
+
+cache_dir <- tools::R_user_dir("partyscape", "cache")
+cached_pg <- file.path(cache_dir, "parlgov_view_election.csv")
+if (!is.na(parlgov_local) && !file.exists(cached_pg)) {
+  dir.create(cache_dir, recursive = TRUE, showWarnings = FALSE)
+  file.copy(parlgov_local, cached_pg, overwrite = FALSE)
+}
+
+has_net <- requireNamespace("curl", quietly = TRUE) &&
+  isTRUE(tryCatch(curl::has_internet(), error = function(e) FALSE))
+
+# For ParlGov chunks we need either a cached/local CSV or a working
+# network endpoint. The env var is a convenient override for CI.
+has_parlgov <- file.exists(cached_pg) || !is.na(parlgov_local) ||
+  (has_net && !identical(Sys.getenv("PARTYSCAPE_SKIP_PARLGOV"), "TRUE"))
+
+knitr::opts_chunk$set(eval = has_magyar)
+```
+
+This vignette reproduces, in the order of appearance, every number and
+figure reported in `main.tex` (*Diversity Profiles for Party Systems*)
+using `partyscape`. The PCA-critique sections (§1--§3) are out of the
+package's scope and use base `prcomp()` / `lm()`; every quantity those
+sections *compare against* (`hill_number`, `hhi`, `enp`,
+`dominance_gap`, `taagepera_allik_shares`) and the positive programme of
+§4--§6 (`diversity_profile`, `crossings`, `alpha_beta_gamma`,
+`collapse_to_elections`, `fetch_parlgov`, `parlgov_seat_shares`) come
+from the package.
+
+Magyar's CSV
+(`party_seat_share_datafile_replication.csv`, Harvard Dataverse DOI
+`10.7910/DVN/Q0OIMY`) is required. Set `PARTYSCAPE_MAGYAR_CSV` to its
+path before knitting; §6 (alpha--beta) additionally needs live ParlGov
+access through `fetch_parlgov()`. Monte Carlo counts are reduced for
+vignette speed (the paper uses $n_\mathrm{sim} = 500$; we default to
+$50$). Bump them back up to reproduce every reported digit exactly.
+
+```{r setup}
+library(partyscape)
+library(ggplot2)
+
+set.seed(42)
+
+dat <- read.csv(magyar_csv, stringsAsFactors = FALSE)
+X   <- as.matrix(dat[, 3:22])
+rownames(X) <- dat$countryyear
+
+cat(sprintf("Loaded %d country-years in %d countries (years %d-%d).\n",
+            nrow(X), length(unique(dat$country)),
+            min(dat$year), max(dat$year)))
+```
+
+## §1 What PCA on sorted compositional data rediscovers
+
+The paper's headline: the first two PCs explain 87% of variance;
+Monte Carlo nulls (uniform Dirichlet, matched-$N_0$ Dirichlet,
+Taagepera--Allik Dirichlet) reproduce the qualitative loading shape,
+showing the eigenvectors are method-imposed, not substantive.
+
+```{r real-pca}
+pca_real      <- prcomp(X, center = TRUE, scale. = FALSE)
+real_var      <- summary(pca_real)$importance[2, 1:5] * 100
+round(real_var, 1)
+cat(sprintf("PC1 + PC2 = %.1f%%\n", sum(real_var[1:2])))
+```
+
+### Monte Carlo nulls
+
+`taagepera_allik_shares()` comes from the package; the rest is base R.
+
+```{r mc-nulls}
+n_sim    <- 50                 # bump to 500 for paper-exact numbers
+D        <- ncol(X)
+Ncy      <- nrow(X)
+N0_real  <- rowSums(X > 0)
+alpha_CH <- 39.1
+
+sim_types <- c("Uniform Dirichlet",
+               "Matched-N0 Dirichlet",
+               "Taagepera-Allik Dirichlet")
+
+sim_results <- setNames(vector("list", length(sim_types)), sim_types)
+for (type in sim_types) {
+  sim_results[[type]] <- list(
+    var1 = numeric(n_sim), var2 = numeric(n_sim),
+    L1 = matrix(0, n_sim, D), L2 = matrix(0, n_sim, D)
+  )
+}
+
+for (s in seq_len(n_sim)) {
+  # (A) Uniform Dirichlet, sorted
+  Xu <- matrix(rexp(Ncy * D, 1), Ncy, D); Xu <- Xu / rowSums(Xu)
+  Xu <- t(apply(Xu, 1, sort, decreasing = TRUE))
+
+  # (B) Matched-N_0 Dirichlet
+  Xm <- matrix(0, Ncy, D)
+  for (i in seq_len(Ncy)) {
+    n0 <- N0_real[i]
+    d  <- rexp(n0, 1); d <- sort(d / sum(d), decreasing = TRUE)
+    Xm[i, 1:n0] <- d
+  }
+
+  # (C) Taagepera-Allik (Cohen & Hanretty 2024, alpha = 39.1)
+  Xt <- matrix(0, Ncy, D)
+  for (i in seq_len(Ncy)) {
+    n0    <- N0_real[i]
+    p_loc <- taagepera_allik_shares(n0)            # <- package helper
+    theta <- alpha_CH * p_loc
+    d     <- rgamma(n0, shape = theta, rate = 1)
+    d     <- sort(d / sum(d), decreasing = TRUE)
+    Xt[i, 1:n0] <- d
+  }
+
+  for (k in seq_along(sim_types)) {
+    Xs   <- switch(k, Xu, Xm, Xt)
+    pp   <- prcomp(Xs, center = TRUE, scale. = FALSE)
+    sim_results[[k]]$var1[s] <- summary(pp)$importance[2, 1] * 100
+    sim_results[[k]]$var2[s] <- summary(pp)$importance[2, 2] * 100
+    sim_results[[k]]$L1[s, ] <- pp$rotation[, 1]
+    sim_results[[k]]$L2[s, ] <- pp$rotation[, 2]
+  }
+}
+
+# Sign-align: PC1 entry 1 positive, PC2 entry 1 negative
+real_load <- pca_real$rotation[, 1:2]
+if (real_load[1, 1] < 0) real_load[, 1] <- -real_load[, 1]
+if (real_load[1, 2] > 0) real_load[, 2] <- -real_load[, 2]
+for (type in sim_types) for (s in seq_len(n_sim)) {
+  if (sim_results[[type]]$L1[s, 1] < 0)
+    sim_results[[type]]$L1[s, ] <- -sim_results[[type]]$L1[s, ]
+  if (sim_results[[type]]$L2[s, 1] > 0)
+    sim_results[[type]]$L2[s, ] <- -sim_results[[type]]$L2[s, ]
+}
+
+mc_diag <- data.frame(
+  null = sim_types,
+  var1 = sapply(sim_results, function(x) mean(x$var1)),
+  sd1  = sapply(sim_results, function(x) sd(x$var1)),
+  var2 = sapply(sim_results, function(x) mean(x$var2)),
+  sd2  = sapply(sim_results, function(x) sd(x$var2)),
+  abs_r_PC1 = sapply(sim_results, function(x)
+    mean(abs(apply(x$L1, 1, cor, real_load[, 1])))),
+  abs_r_PC2 = sapply(sim_results, function(x)
+    mean(abs(apply(x$L2, 1, cor, real_load[, 2]))))
+)
+round(mc_diag[, -1], 3)
+```
+
+Paper's reference numbers: uniform null ≈ 60.3% / 18.6% variance,
+$|r| \approx 0.88$ (PC1) / $0.66$ (PC2); matched-$N_0$ and
+Taagepera--Allik nulls correlate near 1 with the real loadings.
+
+### Figure 1 — loading envelopes
+
+```{r figure1, fig.width = 8, fig.height = 4.5}
+df_fig1 <- data.frame()
+df_fig1 <- rbind(df_fig1, data.frame(
+  party   = rep(1:D, 2),
+  loading = c(real_load[, 1], real_load[, 2]),
+  lower   = NA, upper = NA,
+  source  = "Real data (Magyar)",
+  pc      = rep(c("PC1", "PC2"), each = D)
+))
+for (type in sim_types) {
+  m1  <- colMeans(sim_results[[type]]$L1)
+  ci1 <- apply(sim_results[[type]]$L1, 2, quantile, c(0.025, 0.975))
+  m2  <- colMeans(sim_results[[type]]$L2)
+  ci2 <- apply(sim_results[[type]]$L2, 2, quantile, c(0.025, 0.975))
+  df_fig1 <- rbind(df_fig1, data.frame(
+    party = rep(1:D, 2),
+    loading = c(m1, m2),
+    lower   = c(ci1[1, ], ci2[1, ]),
+    upper   = c(ci1[2, ], ci2[2, ]),
+    source  = paste0(type, " (95% CI)"),
+    pc      = rep(c("PC1", "PC2"), each = D)
+  ))
+}
+
+ggplot(df_fig1, aes(party, loading, colour = source, fill = source)) +
+  geom_hline(yintercept = 0, colour = "grey70") +
+  geom_ribbon(aes(ymin = lower, ymax = upper), alpha = 0.15, colour = NA) +
+  geom_line() + geom_point(size = 0.8) +
+  facet_wrap(~pc) +
+  scale_colour_manual(values = partyscape_palette(4)) +
+  scale_fill_manual(values   = partyscape_palette(4), guide = "none") +
+  labs(x = "Party rank", y = "Loading weight", colour = NULL) +
+  theme_bw(base_size = 10) +
+  theme(legend.position = "bottom", legend.direction = "vertical")
+```
+
+## §2 PC1 and the effective number of parties
+
+Scalars come from `partyscape`. The Magyar columns are already sorted,
+so `X[, 1]` is $x_{(1)}$.
+
+```{r pc1-hh}
+hh_real  <- hhi(X)                    # HHI per row
+enp_real <- enp(X)                    # 1 / HHI
+z_top    <- X[, 1] + X[, 2]
+z_gap    <- X[, 1] - X[, 2]           # same as dominance_gap(X)
+tail_sq  <- rowSums(X[, 3:D]^2)
+
+pc1 <- pca_real$x[, 1]
+c(R2_PC1_HH  = summary(lm(pc1 ~ hh_real))$r.squared,
+  R2_PC1_ENP = summary(lm(pc1 ~ enp_real))$r.squared,
+  R2_PC1_top = summary(lm(pc1 ~ z_top))$r.squared,
+  r_PC1_HH   = cor(pc1, hh_real),
+  r_PC1_ENP  = cor(pc1, enp_real)) |> round(4)
+```
+
+### HH variance decomposition (§2.2)
+
+```{r hh-decomposition}
+c(var_ztop2 = var(z_top^2 / 2),
+  var_zgap2 = var(z_gap^2 / 2),
+  var_tail  = var(tail_sq))           # paper: 0.0123 / 0.0005 / 0.0005
+```
+
+### Closure constraint and sorting-induced variance concentration (§A3)
+
+```{r closure}
+cov_X  <- cov(X)
+cat(sprintf("max |rowSums(Sigma)| = %.3e  (closure)\n",
+            max(abs(rowSums(cov_X)))))
+col_vars <- apply(X, 2, var)
+round(col_vars[1:5], 4)
+cat(sprintf("Var(x_(1)) / total = %.3f  (paper: 0.453)\n",
+            col_vars[1] / sum(col_vars)))
+```
+
+### Two-dimensional sub-PCA (§2.2)
+
+Sub-PCA on $(z_\text{top}, z_\text{gap})$ alone predicts the full-PCA
+PC1 at $R^2 = 0.991$ and PC2 at $R^2 = 0.993$.
+
+```{r two-dim-pca}
+Z     <- cbind(z_top, z_gap)
+pca_Z <- prcomp(Z, center = TRUE, scale. = FALSE)
+sub   <- pca_Z$x
+r2_pc1_sub <- max(summary(lm(pc1 ~ sub[, 1]))$r.squared,
+                  summary(lm(pc1 ~ sub[, 2]))$r.squared)
+r2_pc2_sub <- max(summary(lm(pca_real$x[, 2] ~ sub[, 1]))$r.squared,
+                  summary(lm(pca_real$x[, 2] ~ sub[, 2]))$r.squared)
+c(R2_full_PC1_from_2D = r2_pc1_sub,
+  R2_full_PC2_from_2D = r2_pc2_sub) |> round(4)
+```
+
+## §3 PC2 and the dominance gap
+
+### Σ₁₂ and the $(A, B, C)$ triple (§A4)
+
+```{r sigma12}
+S11 <- cov_X[1, 1]; S22 <- cov_X[2, 2]; S12 <- cov_X[1, 2]
+A_var <- S11 + 2 * S12 + S22          # Var(z_top)
+B_var <- S11 - 2 * S12 + S22          # Var(z_gap)
+C_cov <- S11 - S22                    # Cov(z_top, z_gap)
+c(Sigma11 = S11, Sigma22 = S22, Sigma12 = S12,
+  A = A_var, B = B_var, C = C_cov,
+  cor_top_gap = C_cov / sqrt(A_var * B_var)) |> round(5)
+```
+
+The paper reports $\Sigma_{12} = +0.00413$, $A = 0.0265$, $B = 0.010$.
+
+### Eigenvectors of $\Sigma_Z$ — $(0.96, 0.28)$ and $(-0.28, 0.96)$
+
+```{r eigen-SigmaZ}
+eig <- eigen(cov(Z))
+V   <- eig$vectors
+# Sign-align so the heavy component of each eigenvector is positive
+for (k in 1:2) {
+  heavy <- which.max(abs(V[, k]))
+  if (V[heavy, k] < 0) V[, k] <- -V[, k]
+}
+round(V, 3)
+round(eig$values, 5)
+```
+
+### PC2 vs. the $N_a$ family (§3.2)
+
+`hill_number()` does the work; correlations should sit below 0.10 for
+$a \le 3$ and rise to $\approx 0.20$ at $a = 10$.
+
+```{r pc2-Na}
+pc2 <- pca_real$x[, 2]
+q_probe <- c(0, 0.5, 1, 1.5, 2, 3, 5, 10)
+Na_mat <- sapply(q_probe, function(q) apply(X, 1, hill_number, q = q))
+colnames(Na_mat) <- paste0("N_", q_probe)
+round(cor(pc2, Na_mat), 3)
+
+cat(sprintf("R^2(PC2 ~ gap)         = %.3f\n",
+            summary(lm(pc2 ~ dominance_gap(X)))$r.squared))
+cat(sprintf("cor(ENP, z_top)        = %.3f  (paper: 0.96)\n",
+            cor(enp_real, z_top)))
+```
+
+### Figure: $N_a$ level sets for a 3-party system
+
+Every scalar on the plot is a `hill_number()` call.
+
+```{r figure-ellipse, fig.width = 7, fig.height = 5.5}
+Na_3p <- function(x1, x2, a) hill_number(c(x1, x2, 1 - x1 - x2), a)
+
+x1_ref <- 0.45; x2_ref <- 0.30
+a_grid <- c(0.5, 1, 2, 3, 5, 10)
+ref_Na <- sapply(a_grid, function(a) Na_3p(x1_ref, x2_ref, a))
+
+g <- expand.grid(x1 = seq(0.34, 0.65, length.out = 200),
+                 x2 = seq(0.05, 0.50, length.out = 200))
+g$x3 <- 1 - g$x1 - g$x2
+g    <- g[g$x1 >= g$x2 & g$x2 >= g$x3 & g$x3 >= 0, ]
+
+levels_df <- do.call(rbind, lapply(seq_along(a_grid), function(k) {
+  a <- a_grid[k]
+  data.frame(g, Na = mapply(Na_3p, g$x1, g$x2, MoreArgs = list(a = a)),
+             a = factor(paste0("a = ", a), levels = paste0("a = ", a_grid)))
+}))
+
+ggplot(levels_df, aes(x1, x2, z = Na, colour = a)) +
+  geom_contour(aes(group = a),
+               breaks = ref_Na[match(as.numeric(sub("a = ", "", levels(levels_df$a))),
+                                     a_grid)],
+               linewidth = 0.7) +
+  geom_point(data = data.frame(x1 = x1_ref, x2 = x2_ref),
+             aes(x1, x2), inherit.aes = FALSE, size = 3) +
+  scale_colour_manual(values = partyscape_palette(length(a_grid))) +
+  coord_fixed() +
+  labs(x = expression(x[(1)]), y = expression(x[(2)]),
+       colour = "level set",
+       title = "Level sets of N_a through A = (0.45, 0.30, 0.25)") +
+  theme_bw(base_size = 11)
+```
+
+## §4 Diversity profiles — UK 1997 vs. Germany 2009
+
+```{r sec4-profiles, fig.width = 8, fig.height = 4}
+uk97  <- X["United Kingdom_1997", ]
+ger09 <- X["Germany_2009", ]
+
+scalars <- data.frame(
+  N0     = c(sum(uk97 > 0),           sum(ger09 > 0)),
+  ENP    = c(enp(uk97),               enp(ger09)),
+  N_inf  = c(1 / max(uk97),           1 / max(ger09)),
+  gap    = c(dominance_gap(uk97),     dominance_gap(ger09)),
+  topTwo = c(top_two(uk97),           top_two(ger09))
+)
+rownames(scalars) <- c("UK 1997", "Germany 2009")
+round(scalars, 3)
+
+dp_pair <- diversity_profile(rbind(`UK 1997` = uk97,
+                                   `Germany 2009` = ger09),
+                             q = seq(0, 8, 0.02))
+autoplot(dp_pair) +
+  labs(title = "UK 1997 (steep — concentrated) vs. Germany 2009 (flat — balanced)")
+```
+
+## §6 Crossing diversity profiles
+
+### 16-country-year illustrative sample (§6 paragraph 1)
+
+```{r crossings-kmeans}
+q_fine  <- seq(0, 10, 0.02)
+all_enp <- enp(X)
+all_gap <- dominance_gap(X)
+
+select_16cy_kmeans <- function(enp_vec, gap_vec, k = 16, seed = 42) {
+  feats <- cbind(scale(enp_vec), scale(gap_vec))
+  set.seed(seed)
+  km <- kmeans(feats, centers = k, nstart = 50, iter.max = 100)
+  sel <- integer(k)
+  for (cl in seq_len(k)) {
+    members <- which(km$cluster == cl)
+    d <- rowSums(sweep(feats[members, , drop = FALSE], 2,
+                       km$centers[cl, ])^2)
+    sel[cl] <- members[which.min(d)]
+  }
+  sort(unique(sel))
+}
+sel_16 <- select_16cy_kmeans(all_enp, all_gap)
+data.frame(country_year = rownames(X)[sel_16],
+           ENP = round(all_enp[sel_16], 2),
+           gap = round(all_gap[sel_16], 3))
+```
+
+```{r crossings-16}
+M16    <- X[sel_16, , drop = FALSE]
+cr_16  <- crossings(M16, q = q_fine, method = "signchange")
+n_cross_16 <- sum(cr_16$pairs$n_crossings > 0)
+cat(sprintf("16-CY sample: %d of %d pairs cross (%.1f%%)  [paper: 44/120 = 36.7%%]\n",
+            n_cross_16, nrow(cr_16$pairs),
+            100 * n_cross_16 / nrow(cr_16$pairs)))
+```
+
+#### Table 1 — virtually-identical-ENP pairs
+
+```{r crossings-table1}
+tbl <- cr_16$pairs
+tbl$system_A <- rownames(M16)[tbl$i]
+tbl$system_B <- rownames(M16)[tbl$j]
+tbl$ENP_A    <- round(all_enp[sel_16][tbl$i], 2)
+tbl$ENP_B    <- round(all_enp[sel_16][tbl$j], 2)
+tbl$dENP     <- round(abs(all_enp[sel_16][tbl$i] -
+                           all_enp[sel_16][tbl$j]), 2)
+tbl$dgap     <- round(abs(all_gap[sel_16][tbl$i] -
+                           all_gap[sel_16][tbl$j]), 3)
+tbl$N0_A     <- rowSums(M16 > 0)[tbl$i]
+tbl$N0_B     <- rowSums(M16 > 0)[tbl$j]
+
+cross_pairs <- tbl[tbl$n_crossings > 0, ]
+cross_pairs <- cross_pairs[order(cross_pairs$dENP), ]
+head(cross_pairs[, c("system_A", "system_B", "N0_A", "N0_B",
+                     "ENP_A", "ENP_B", "dENP", "dgap",
+                     "n_crossings", "first_q")], 10)
+```
+
+### Stratified-redraw robustness (§6 paragraph 2)
+
+100 draws on a 4$\times$4 (ENP, gap) quartile grid.
+
+```{r crossings-redraw}
+stratified_redraw_rate <- function(enp_vec, gap_vec, n_draws = 100,
+                                   seed = 2026) {
+  enp_q <- quantile(enp_vec, seq(0, 1, length.out = 5))
+  gap_q <- quantile(gap_vec, seq(0, 1, length.out = 5))
+  set.seed(seed)
+  rates <- numeric(n_draws)
+  for (d in seq_len(n_draws)) {
+    sel <- integer(0)
+    for (i in 1:4) for (j in 1:4) {
+      in_cell <- enp_vec >= enp_q[i] & enp_vec <= enp_q[i + 1] &
+                 gap_vec >= gap_q[j] & gap_vec <= gap_q[j + 1]
+      idx <- which(in_cell)
+      if (length(idx)) sel <- c(sel, sample(idx, 1))
+    }
+    if (length(sel) < 16) {
+      sel <- c(sel, sample(setdiff(seq_along(enp_vec), sel),
+                           16 - length(sel)))
+    } else if (length(sel) > 16) sel <- sample(sel, 16)
+    cr <- crossings(X[sel, , drop = FALSE], q = q_fine,
+                    method = "signchange")
+    rates[d] <- mean(cr$pairs$n_crossings > 0)
+  }
+  rates
+}
+
+redraw <- stratified_redraw_rate(all_enp, all_gap, n_draws = 100)
+c(mean     = mean(redraw),
+  p5       = quantile(redraw, 0.05),
+  p95      = quantile(redraw, 0.95),
+  min      = min(redraw),
+  max      = max(redraw)) |> round(3)
+```
+
+Paper: mean 33%, 5th--95th percentile 22%--44%.
+
+### Full-dataset scan — all 675 country-years, |ΔENP| < 0.5
+
+We compute the full profile matrix once with
+`diversity_profile()` and pull the `wide` attribute for fast sign-change
+scanning.
+
+```{r crossings-full}
+dp_full <- diversity_profile(X, q = q_fine)
+prof_mat <- attr(dp_full, "wide")
+
+count_crossings_row <- function(pi, pj) {
+  d  <- pi - pj
+  nz <- d != 0
+  d  <- d[nz]
+  if (length(d) < 2) return(list(n = 0L, first = NA_real_))
+  s  <- sign(d)
+  ch <- which(diff(s) != 0)
+  list(n = length(ch),
+       first = if (length(ch)) q_fine[nz][ch[1]] else NA_real_)
+}
+
+pairs_df <- data.frame()
+for (i in 1:(Ncy - 1L)) {
+  cand <- (i + 1L):Ncy
+  keep <- abs(all_enp[i] - all_enp[cand]) < 0.5
+  cand <- cand[keep]
+  for (j in cand) {
+    r <- count_crossings_row(prof_mat[i, ], prof_mat[j, ])
+    pairs_df <- rbind(pairs_df, data.frame(
+      i = i, j = j,
+      dENP = abs(all_enp[i] - all_enp[j]),
+      dgap = abs(all_gap[i] - all_gap[j]),
+      n_cross = r$n,
+      first_q = r$first
+    ))
+  }
+}
+
+cat(sprintf("Near-ENP pairs (|dENP| < 0.5): %d  [paper: 53,861]\n",
+            nrow(pairs_df)))
+cat(sprintf("Pairs with >=1 crossing:        %d (%.1f%%)  [paper: 66%%]\n",
+            sum(pairs_df$n_cross > 0),
+            100 * mean(pairs_df$n_cross > 0)))
+cat(sprintf("Mean first-crossing q:          %.2f  [paper: 1.98]\n",
+            mean(pairs_df$first_q, na.rm = TRUE)))
+
+for (b in list(c(0, 0.05), c(0.05, 0.10), c(0.10, 0.15), c(0.15, 1))) {
+  m <- pairs_df$dgap >= b[1] & pairs_df$dgap < b[2]
+  cat(sprintf("  |dgap| in [%.2f, %.2f): n = %5d, rate = %.3f\n",
+              b[1], b[2], sum(m), mean(pairs_df$n_cross[m] > 0)))
+}
+```
+
+Paper's ladder: 52% → 79% across the $|\Delta z_{\mathrm{gap}}|$ bands.
+
+### France 2007 vs. Spain 2000 (sanity check)
+
+```{r france-spain}
+fr <- X["France_2007", ]; sp <- X["Spain_2000", ]
+cat(sprintf("France 2007: x(1)=%.4f x(2)=%.4f gap=%.4f N0=%d ENP=%.3f N_inf=%.3f\n",
+            fr[1], fr[2], fr[1] - fr[2], sum(fr > 0), enp(fr), 1 / max(fr)))
+cat(sprintf("Spain  2000: x(1)=%.4f x(2)=%.4f gap=%.4f N0=%d ENP=%.3f N_inf=%.3f\n",
+            sp[1], sp[2], sp[1] - sp[2], sum(sp > 0), enp(sp), 1 / max(sp)))
+
+cr_FS <- crossings(fr, sp, q = q_fine)
+cat(sprintf("Crossings at q = %s\n",
+            paste(round(cr_FS$locations[[1]], 3), collapse = ", ")))
+```
+
+### Figure 2 — case-study profile pairs
+
+Netherlands 1982 vs. Sweden 2002 (two crossings); UK 2005 vs. Greece
+2007 (single crossing); Italy 2006 vs. Portugal 2005 (non-crossing,
+uniform dominance).
+
+```{r figure-crossings, fig.width = 6, fig.height = 8}
+case_pairs <- list(
+  c("Netherlands_1982",     "Sweden_2002"),
+  c("United Kingdom_2005",  "Greece_2007"),
+  c("Italy_2006",           "Portugal_2005")
+)
+for (pp in case_pairs) {
+  cr <- crossings(X[pp[1], ], X[pp[2], ], q = q_fine)
+  cat(sprintf("\n%s vs %s\n  ENP: %.2f vs %.2f  |  N_0: %d vs %d  |  N_inf: %.2f vs %.2f\n  crossings at q = %s\n",
+              pp[1], pp[2],
+              enp(X[pp[1], ]), enp(X[pp[2], ]),
+              sum(X[pp[1], ] > 0), sum(X[pp[2], ] > 0),
+              1 / max(X[pp[1], ]), 1 / max(X[pp[2], ]),
+              if (cr$pairs$n_crossings == 0) "(none)"
+              else paste(round(cr$locations[[1]], 3), collapse = ", ")))
+}
+
+plots <- lapply(case_pairs, function(pp) {
+  cr <- crossings(X[pp[1], ], X[pp[2], ], q = q_fine)
+  autoplot(cr) +
+    ggplot2::geom_vline(xintercept = 2, linetype = "dashed",
+                        colour = "grey50") +
+    ggplot2::labs(title = paste(pp[1], "vs", pp[2]))
+})
+for (g in plots) print(g)
+```
+
+## §7 Alpha--beta decomposition
+
+### Sorted (Magyar) representation
+
+`alpha_beta_gamma()` with `years = ...` auto-collapses repeated
+consecutive rows via `collapse_to_elections()` and weights by term
+length.
+
+```{r beta-sorted}
+countries <- unique(dat$country)
+q_beta    <- c(0, 1, 2, 5)
+
+beta_sorted <- do.call(rbind, lapply(countries, function(cc) {
+  idx <- which(dat$country == cc)
+  if (length(idx) < 3) return(NULL)
+  bd  <- alpha_beta_gamma(X[idx, , drop = FALSE],
+                          q = q_beta, years = dat$year[idx],
+                          collapse = TRUE)
+  data.frame(country = cc, q = bd$q, alpha = bd$alpha,
+             beta = bd$beta, gamma = bd$gamma, T = bd$T)
+}))
+
+# Tidy wide table, ordered by beta at q = 0 (Figure 3's ordering)
+wide_sorted <- reshape(
+  beta_sorted[, c("country", "q", "beta")],
+  idvar = "country", timevar = "q", direction = "wide"
+)
+names(wide_sorted) <- c("country", paste0("beta_q", q_beta))
+wide_sorted <- wide_sorted[order(-wide_sorted$beta_q0), ]
+rownames(wide_sorted) <- NULL
+knitr::kable(wide_sorted, digits = 3,
+             caption = "Sorted-data beta by order (paper's Figure 3b).")
+```
+
+Key countries cited in the text:
+
+```{r beta-sorted-highlights}
+for (cc in c("Greece", "Austria", "Italy", "Finland", "United Kingdom")) {
+  row <- wide_sorted[wide_sorted$country == cc, ]
+  cat(sprintf("  %-15s  beta_q0 = %.3f  beta_q2 = %.3f  beta_q5 = %.3f\n",
+              cc, row$beta_q0, row$beta_q2, row$beta_q5))
+}
+```
+
+Unit-test (disjoint communities should give $\beta_2 = 2$):
+
+```{r beta-unit-test}
+disjoint <- rbind(c(rep(0.1, 10), rep(0, 10)),
+                  c(rep(0, 10), 0.75, 0.25, rep(0, 8)))
+tst <- alpha_beta_gamma(disjoint, q = 2)
+stopifnot(abs(tst$beta - 2) < 1e-8)
+cat(sprintf("Disjoint test: gamma=%.3f  alpha=%.3f  beta=%.3f  (expect 5.517, 2.759, 2.000)\n",
+            tst$gamma, tst$alpha, tst$beta))
+```
+
+### Unsorted (ParlGov) representation
+
+```{r beta-parlgov-setup, eval = has_magyar && has_parlgov}
+parlgov_names <- c("Austria", "Belgium", "Denmark", "Finland", "France",
+                   "Germany", "Greece", "Iceland", "Ireland", "Italy",
+                   "Luxembourg", "Netherlands", "Norway", "Portugal",
+                   "Spain", "Sweden", "United Kingdom")
+
+pg <- tryCatch(fetch_parlgov(), error = function(e) {
+  message("fetch_parlgov() failed (", conditionMessage(e),
+          "); falling back to local CSV.")
+  read.csv(parlgov_local, stringsAsFactors = FALSE)
+})
+
+# The live endpoint uses full country names ("Germany"); the Magyar
+# replication CSV uses 3-letter ISO codes ("DEU"). Normalize to full
+# names so the rest of the chunk works regardless of source.
+iso_to_name <- c(AUT = "Austria", BEL = "Belgium", DNK = "Denmark",
+                 FIN = "Finland", FRA = "France", DEU = "Germany",
+                 GRC = "Greece",  ISL = "Iceland", IRL = "Ireland",
+                 ITA = "Italy",   LUX = "Luxembourg",
+                 NLD = "Netherlands", NOR = "Norway", PRT = "Portugal",
+                 ESP = "Spain",   SWE = "Sweden",
+                 GBR = "United Kingdom")
+if (all(nchar(unique(pg$country)) == 3L)) {
+  pg$country <- unname(iso_to_name[pg$country])
+  pg <- pg[!is.na(pg$country), ]
+}
+
+pg  <- pg[pg$country %in% parlgov_names, ]
+pg  <- pg[!is.na(pg$seats), ]
+pg$year <- as.integer(substr(pg$date, 1, 4))
+pg  <- pg[pg$year >= min(dat$year) & pg$year <= max(dat$year), ]
+
+shares <- parlgov_seat_shares(pg,
+                              countries = parlgov_names,
+                              years     = min(dat$year):max(dat$year),
+                              type      = "parliament")
+dim(shares)
+```
+
+```{r beta-parlgov, eval = has_magyar && has_parlgov}
+country_vec <- attr(shares, "country")
+year_vec    <- attr(shares, "year")
+
+beta_pg <- do.call(rbind, lapply(parlgov_names, function(cc) {
+  keep <- country_vec == cc
+  if (sum(keep) < 3) return(NULL)
+  mat <- shares[keep, , drop = FALSE]
+  # drop party columns that are zero throughout this country's history
+  mat <- mat[, colSums(mat) > 0, drop = FALSE]
+  bd  <- alpha_beta_gamma(mat, q = q_beta, years = year_vec[keep])
+  data.frame(country = cc, q = bd$q, alpha = bd$alpha,
+             beta = bd$beta, gamma = bd$gamma, T = bd$T)
+}))
+
+wide_pg <- reshape(
+  beta_pg[, c("country", "q", "beta")],
+  idvar = "country", timevar = "q", direction = "wide"
+)
+names(wide_pg) <- c("country", paste0("beta_q", q_beta))
+wide_pg <- wide_pg[order(-wide_pg$beta_q0), ]
+rownames(wide_pg) <- NULL
+knitr::kable(wide_pg, digits = 3,
+             caption = "Unsorted (ParlGov) beta by order (paper's Figure 3).")
+```
+
+Italy's headline numbers:
+
+```{r beta-italy, eval = has_magyar && has_parlgov}
+beta_pg[beta_pg$country == "Italy", ]
+```
+
+Paper reports $\beta_0 = 3.87$, $\beta_2 = 2.35$, $\beta_5 = 2.09$.
+
+### Sorted-vs-unsorted gap at q = 2 (Figure 3c)
+
+```{r beta-dumbbell, eval = has_magyar && has_parlgov, fig.height = 4.5}
+cmp <- merge(beta_sorted[, c("country", "q", "beta")],
+             beta_pg[,     c("country", "q", "beta")],
+             by = c("country", "q"),
+             suffixes = c(".sorted", ".parlgov"))
+cmp_q2 <- cmp[cmp$q == 2, ]
+cmp_q2 <- cmp_q2[order(cmp_q2$beta.parlgov), ]
+cmp_q2$country <- factor(cmp_q2$country, levels = cmp_q2$country)
+
+ggplot(cmp_q2) +
+  geom_segment(aes(x = beta.sorted, xend = beta.parlgov,
+                   y = country, yend = country),
+               colour = "grey70") +
+  geom_point(aes(x = beta.sorted, y = country,
+                 colour = "sorted (Magyar)"), size = 2) +
+  geom_point(aes(x = beta.parlgov, y = country,
+                 colour = "unsorted (ParlGov)"), size = 2) +
+  geom_vline(xintercept = 1, linetype = "dashed", colour = "grey60") +
+  scale_colour_manual(values = partyscape_palette(2)) +
+  labs(x = expression(beta(q == 2)), y = NULL, colour = NULL) +
+  theme_bw(base_size = 11)
+```
+
+### Continuous β(q) profile (Figure 4)
+
+```{r beta-profile, eval = has_magyar && has_parlgov, fig.height = 4.5}
+q_grid <- seq(0, 5, 0.1)
+
+profile_one <- function(mat, years) {
+  bd <- alpha_beta_gamma(mat, q = q_grid, years = years)
+  bd$beta
+}
+
+bp_sorted <- do.call(rbind, lapply(countries, function(cc) {
+  idx <- which(dat$country == cc)
+  if (length(idx) < 3) return(NULL)
+  data.frame(country = cc, q = q_grid,
+             beta = profile_one(X[idx, , drop = FALSE], dat$year[idx]),
+             panel = "Sorted (Magyar)")
+}))
+
+bp_pg <- do.call(rbind, lapply(parlgov_names, function(cc) {
+  keep <- country_vec == cc
+  if (sum(keep) < 3) return(NULL)
+  mat <- shares[keep, , drop = FALSE]
+  mat <- mat[, colSums(mat) > 0, drop = FALSE]
+  data.frame(country = cc, q = q_grid,
+             beta = profile_one(mat, year_vec[keep]),
+             panel = "Unsorted (ParlGov)")
+}))
+
+bp <- rbind(bp_sorted, bp_pg)
+hi <- c("Italy", "Belgium", "Greece", "Austria")
+bp$colour <- ifelse(bp$country %in% hi, bp$country, "(other)")
+
+ggplot(bp, aes(q, beta, group = country, colour = colour)) +
+  geom_hline(yintercept = 1, linetype = "dashed", colour = "grey60") +
+  geom_line(linewidth = 0.6) +
+  facet_wrap(~ panel, scales = "free_y") +
+  scale_colour_manual(values = c(
+    Italy   = partyscape_palette(4)[1],
+    Belgium = partyscape_palette(4)[2],
+    Greece  = partyscape_palette(4)[3],
+    Austria = partyscape_palette(4)[4],
+    `(other)` = "grey75")) +
+  labs(x = "order q", y = expression(beta(q)), colour = NULL) +
+  theme_bw(base_size = 11)
+```
+
+## Summary of what's replicated
+
+| Paper section | Key claim | Replicated via |
+| :-- | :-- | :-- |
+| §1 | PC1/PC2 variance = 70.6% / 16.5% | `prcomp()` |
+| §1 | Three Monte Carlo nulls, $|r|$ with real loadings | `taagepera_allik_shares()` + `prcomp()` |
+| §2 | $R^2(\text{PC1}, \text{HH}) = 0.96$; $(A, B, C)$ triple | `hhi()`, `enp()` + `lm()` |
+| §2 | 2×2 sub-PCA predicts full PC1 at $R^2 = 0.991$ | `prcomp()` on $(z_\text{top}, z_\text{gap})$ |
+| §3 | $|r(\text{PC2}, N_a)| < 0.10$ for $a \le 3$ | `hill_number()` |
+| §3 | $R^2(\text{PC2}, \text{gap}) \approx 0.96$ | `dominance_gap()` + `lm()` |
+| §4 | UK 1997 / Germany 2009 anchor values | `diversity_profile()`, `hill_number()`, `enp()`, scalars |
+| §6 | 16-CY crossing rate ≈ 37% | `crossings()` |
+| §6 | Stratified-redraw 22–44% | `crossings()` |
+| §6 | Full-dataset scan: 66% crossing, $\bar{q}_1 \approx 1.98$ | `diversity_profile()` + sign-change scan |
+| §6 | France/Spain, NL/SE, UK/GR, IT/PT case pairs | `crossings()` |
+| §7 | Per-country $\beta$ at $q \in \{0,1,2,5\}$, sorted + unsorted | `alpha_beta_gamma()`, `collapse_to_elections()`, `fetch_parlgov()`, `parlgov_seat_shares()` |
+| §7 | Italy $\beta_0 = 3.87$, $\beta_2 = 2.35$, $\beta_5 = 2.09$ | `alpha_beta_gamma()` on ParlGov |
+| §7 | Sorted $\le$ unsorted at every $q$ | same |
+| §7 | Disjoint-communities sanity: $\beta_2 = 2$ | `alpha_beta_gamma()` |
+
+For paper-exact headline numbers, bump `n_sim` back to 500 in §1.

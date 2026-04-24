@@ -31,6 +31,13 @@ head(pg[, c("country", "date", "party", "seats")])
 
 ## Reshape to a seat-share matrix
 
+`parlgov_seat_shares()` produces a **party-labeled** matrix: one column
+per ParlGov `party_id`, preserved across elections. Rows are
+country-year elections. No row-sorting takes place; column 1 is
+whichever party ParlGov lists first, not "the largest party that year."
+This is what makes `alpha_beta_gamma()` below actually detect changes
+in effective power structure.
+
 ```{r reshape}
 shares <- parlgov_seat_shares(pg,
                               countries = c("Netherlands", "Sweden"),

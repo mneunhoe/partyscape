@@ -47,8 +47,17 @@ composition is counted once; weights default to term lengths so
 long-lived elections do not dominate.
 }
 \examples{
-m <- rbind(c(0.5, 0.3, 0.2),
-           c(0.4, 0.3, 0.3),
-           c(0.5, 0.3, 0.2))
-alpha_beta_gamma(m, q = c(0, 1, 2))
+# Three German Bundestag elections. Columns are stable party slots;
+# SPD and CDU/CSU swap positions as the largest party between 2002
+# (SPD) and 2005/2009 (CDU/CSU). Sorting the rows would hide this
+# identity shift — the whole point of party-labeled data.
+germany <- rbind(
+  `2002` = c(CDU = 0.315, CSU = 0.096, SPD = 0.416,
+             FDP = 0.078, Gruene = 0.091, Linke = 0.003),
+  `2005` = c(CDU = 0.293, CSU = 0.075, SPD = 0.362,
+             FDP = 0.099, Gruene = 0.083, Linke = 0.088),
+  `2009` = c(CDU = 0.312, CSU = 0.072, SPD = 0.235,
+             FDP = 0.150, Gruene = 0.109, Linke = 0.122)
+)
+alpha_beta_gamma(germany, q = c(0, 1, 2, 5))
 }

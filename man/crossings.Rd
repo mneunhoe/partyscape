@@ -56,10 +56,17 @@ an interpolated value.
 }
 }
 \examples{
-a <- c(0.45, 0.30, 0.15, 0.10)
-b <- c(0.40, 0.35, 0.15, 0.10)
-crossings(a, b)
-
-mat <- rbind(a = a, b = b, c = c(0.7, 0.2, 0.1, 0))
-crossings(mat)
+# Two party systems with similar ENP but different profile shapes —
+# party-labeled vectors, NOT sorted by size.
+netherlands_1982 <- c(
+  PvdA = 0.313, CDA = 0.300, VVD = 0.240, D66 = 0.040,
+  PSP = 0.020, CPN = 0.020, SGP = 0.020, PPR  = 0.013,
+  RPF = 0.013, GPV = 0.007, CP  = 0.007, DS70 = 0.007
+)
+sweden_2002 <- c(
+  SAP = 0.415, Moderata = 0.156, Folkpartiet = 0.138,
+  Kristdemokraterna = 0.096, Vansterpartiet = 0.086,
+  Centerpartiet = 0.063, Miljopartiet = 0.046
+)
+crossings(netherlands_1982, sweden_2002)
 }

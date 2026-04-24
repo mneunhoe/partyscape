@@ -20,23 +20,44 @@ Two party systems can share an effective-number-of-parties value and yet
 look nothing alike at the ends of the profile. `crossings()` detects the
 q values where one system overtakes the other.
 
-```{r}
-a <- c(0.55, 0.15, 0.10, 0.08, 0.05, 0.04, 0.03)
-b <- c(0.40, 0.30, 0.30)
-c(enp_a = enp(a), enp_b = enp(b))
+The example below uses the paper's canonical case — Netherlands 1982
+vs. Sweden 2002. Both have ENP near 4, but the Dutch system has many
+small parties (steep profile) while Sweden has fewer, larger ones (flat
+profile), so the profiles cross twice.
 
-cr <- crossings(a, b, q = seq(0, 5, 0.01))
+```{r canonical-crossing}
+# Party-labeled vectors. Column order is party identity (stable, e.g.,
+# alphabetical within each system), NOT rank by size.
+netherlands_1982 <- c(
+  PvdA = 0.313, CDA = 0.300, VVD = 0.240, D66 = 0.040,
+  PSP = 0.020, CPN = 0.020, SGP = 0.020, PPR = 0.013,
+  RPF = 0.013, GPV = 0.007, CP  = 0.007, DS70 = 0.007
+)
+sweden_2002 <- c(
+  SAP = 0.415, Moderata = 0.156, Folkpartiet = 0.138,
+  Kristdemokraterna = 0.096, Vansterpartiet = 0.086,
+  Centerpartiet = 0.063, Miljopartiet = 0.046
+)
+
+c(enp_nl = enp(netherlands_1982), enp_se = enp(sweden_2002))
+
+cr <- crossings(netherlands_1982, sweden_2002, q = seq(0, 10, 0.01))
 cr
 plot(cr)
 ```
 
 ## Dataset-wide scans
 
-For large comparisons, `method = "signchange"` is cheap and robust:
+For large comparisons, `method = "signchange"` is cheap and robust. The
+rows below are draws from an asymmetric Dirichlet — a stand-in for real
+party-labeled compositions; the point is that each row is a single
+party system, and the `crossings()` call treats each row as its own
+system without any sorting assumption.
 
-```{r}
+```{r scan}
 set.seed(1)
 many <- t(replicate(8, { x <- rgamma(5, 0.8); x / sum(x) }))
+colnames(many) <- paste0("Party_", LETTERS[1:5])
 rownames(many) <- paste0("sys", 1:8)
 cr_all <- crossings(many, q = seq(0, 5, 0.01), method = "signchange")
 head(as.data.frame(cr_all))
