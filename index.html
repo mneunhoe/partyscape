@@ -75,7 +75,7 @@
 <img src="logo.png" class="logo" alt=""><h1 id="partyscape-">partyscape <a class="anchor" aria-label="anchor" href="#partyscape-"></a>
 </h1>
 </div>
-<p>Diversity profiles, profile crossings, and beta diversity for party-system research. Implements the three analytical tools proposed in Neunhoeffer (forthcoming) on a small, tidyverse-free footprint.</p>
+<p>Diversity profiles, profile crossings, and beta diversity for party-system research. Implements the three analytical tools proposed in “Diversity Profiles for Party Systems” (Neunhoeffer, Under Review).</p>
 <div class="section level2">
 <h2 id="installation">Installation<a class="anchor" aria-label="anchor" href="#installation"></a>
 </h2>
@@ -106,10 +106,19 @@
 <span></span>
 <span><span class="co"># 1. Diversity profile: a steep UK curve vs. a flat German one.</span></span>
 <span><span class="fu"><a href="reference/diversity_profile.html">diversity_profile</a></span><span class="op">(</span><span class="va">uk_1997</span><span class="op">)</span></span>
+<span><span class="co">#&gt; &lt;diversity_profile: 1 composition over q grid [0, 5], 101 points&gt;</span></span>
+<span><span class="co">#&gt;   D(0)  D(1)  D(2)  D(5)</span></span>
+<span><span class="co">#&gt; 1   10 2.845 2.129 1.763</span></span>
 <span><span class="fu"><a href="reference/diversity_profile.html">diversity_profile</a></span><span class="op">(</span><span class="va">germany_2009</span><span class="op">)</span></span>
+<span><span class="co">#&gt; &lt;diversity_profile: 1 composition over q grid [0, 5], 101 points&gt;</span></span>
+<span><span class="co">#&gt;   D(0)  D(1) D(2)  D(5)</span></span>
+<span><span class="co">#&gt; 1    6 5.344 4.83 4.029</span></span>
 <span></span>
 <span><span class="co"># 2. Profile crossings across two systems.</span></span>
 <span><span class="fu"><a href="reference/crossings.html">crossings</a></span><span class="op">(</span><span class="va">uk_1997</span>, <span class="va">germany_2009</span>, q <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">5</span>, <span class="fl">0.01</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="co">#&gt; &lt;crossings: 1 pair, method = interp&gt;</span></span>
+<span><span class="co">#&gt;  i j id_i id_j n_crossings   first_q</span></span>
+<span><span class="co">#&gt;  1 2    a    b           1 0.3178071</span></span>
 <span></span>
 <span><span class="co"># 3. Beta diversity across Germany's 2002-2005-2009 trajectory. Columns</span></span>
 <span><span class="co"># share the same party slots across rows so CDU/SPD swapping as the</span></span>
@@ -123,27 +132,15 @@
 <span>             FDP <span class="op">=</span> <span class="fl">0.150</span>, Gruene <span class="op">=</span> <span class="fl">0.109</span>, Linke <span class="op">=</span> <span class="fl">0.122</span><span class="op">)</span></span>
 <span><span class="op">)</span></span>
 <span><span class="fu"><a href="reference/alpha_beta_gamma.html">alpha_beta_gamma</a></span><span class="op">(</span><span class="va">germany</span>, q <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">1</span>, <span class="fl">2</span>, <span class="fl">5</span><span class="op">)</span>,</span>
-<span>                 years <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">2002</span>, <span class="fl">2005</span>, <span class="fl">2009</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
-</div>
-<div class="section level2">
-<h2 id="what-the-package-provides">What the package provides<a class="anchor" aria-label="anchor" href="#what-the-package-provides"></a>
-</h2>
-<ul>
-<li>
-<strong>Pillar 1 — diversity profiles:</strong> <code><a href="reference/hill_number.html">hill_number()</a></code>, <code><a href="reference/diversity_profile.html">diversity_profile()</a></code>, <code><a href="reference/evenness_profile.html">evenness_profile()</a></code>.</li>
-<li>
-<strong>Pillar 2 — profile crossings:</strong> <code><a href="reference/crossings.html">crossings()</a></code> (linear-interpolation or sign-change detector).</li>
-<li>
-<strong>Pillar 3 — beta diversity:</strong> <code><a href="reference/alpha_beta_gamma.html">alpha_beta_gamma()</a></code>, <code><a href="reference/collapse_to_elections.html">collapse_to_elections()</a></code>.</li>
-<li>
-<strong>Scalar summaries:</strong> <code><a href="reference/hhi.html">hhi()</a></code>, <code><a href="reference/rae.html">rae()</a></code>, <code><a href="reference/enp.html">enp()</a></code>, <code><a href="reference/dominance_gap.html">dominance_gap()</a></code>, <code><a href="reference/top_two.html">top_two()</a></code>.</li>
-<li>
-<strong>Null model:</strong> <code><a href="reference/taagepera_allik_shares.html">taagepera_allik_shares()</a></code>.</li>
-<li>
-<strong>ParlGov accessors:</strong> <code><a href="reference/fetch_parlgov.html">fetch_parlgov()</a></code>, <code><a href="reference/parlgov_seat_shares.html">parlgov_seat_shares()</a></code>.</li>
-<li>
-<strong>Plotting:</strong> <code>autoplot()</code> / <code><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot()</a></code> methods for every S3 class, plus a <code><a href="reference/partyscape_palette.html">partyscape_palette()</a></code> helper.</li>
-</ul>
+<span>                 years <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">2002</span>, <span class="fl">2005</span>, <span class="fl">2009</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="co">#&gt; Warning: as_composition(): renormalizing rows so each sums to 1 (max deviation</span></span>
+<span><span class="co">#&gt; was 0.001).</span></span>
+<span><span class="co">#&gt; &lt;beta_diversity: T = 3 rows, 4 q points&gt;</span></span>
+<span><span class="co">#&gt;  q    alpha     beta    gamma T</span></span>
+<span><span class="co">#&gt;  0 6.000000 1.000000 6.000000 3</span></span>
+<span><span class="co">#&gt;  1 4.689208 1.040449 4.878880 3</span></span>
+<span><span class="co">#&gt;  2 3.997689 1.039583 4.155931 3</span></span>
+<span><span class="co">#&gt;  5 3.221741 1.067642 3.439665 3</span></span></code></pre></div>
 </div>
 </div>
   </main><aside class="col-md-3"><div class="links">

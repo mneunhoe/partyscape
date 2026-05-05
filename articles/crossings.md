@@ -1,6 +1,7 @@
 # Profile crossings: when ENP isn't enough
 
 ``` r
+
 library(partyscape)
 ```
 
@@ -15,6 +16,7 @@ small parties (steep profile) while Sweden has fewer, larger ones (flat
 profile), so the profiles cross twice.
 
 ``` r
+
 # Party-labeled vectors. Column order is party identity (stable, e.g.,
 # alphabetical within each system), NOT rank by size.
 netherlands_1982 <- c(
@@ -52,6 +54,7 @@ system, and the
 call treats each row as its own system without any sorting assumption.
 
 ``` r
+
 set.seed(1)
 many <- t(replicate(8, { x <- rgamma(5, 0.8); x / sum(x) }))
 colnames(many) <- paste0("Party_", LETTERS[1:5])

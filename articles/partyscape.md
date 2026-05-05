@@ -1,6 +1,7 @@
 # Getting started with partyscape
 
 ``` r
+
 library(partyscape)
 ```
 
@@ -19,6 +20,7 @@ Concretely: use named vectors (or a matrix with named columns). The
 entry order reflects party identity, not rank.
 
 ``` r
+
 germany_2009 <- c(CDU = 0.312, CSU = 0.072, SPD = 0.235,
                   FDP = 0.150, Gruene = 0.109, Linke = 0.122)
 
@@ -40,6 +42,7 @@ sweeps q over a grid and returns an object with
 methods:
 
 ``` r
+
 dp <- diversity_profile(germany_2009)
 plot(dp)
 ```
@@ -54,6 +57,7 @@ elections. Notice SPD \> CDU/CSU in 2002 and CDU/CSU \> SPD in
 2005/2009: the columns are a fixed set of parties, NOT ordered by size.
 
 ``` r
+
 germany <- rbind(
   `2002` = c(CDU = 0.315, CSU = 0.096, SPD = 0.416,
              FDP = 0.078, Gruene = 0.091, Linke = 0.003),
@@ -72,6 +76,7 @@ plot(diversity_profile(germany))
 Evenness profile — scaled so every curve starts at 1 at q = 0:
 
 ``` r
+
 plot(evenness_profile(germany))
 #> Warning: as_composition(): renormalizing rows so each sums to 1 (max deviation
 #> was 0.001).
@@ -88,6 +93,7 @@ profile but would invite the row-sorted mental model that the package
 tries to avoid.
 
 ``` r
+
 uk_1997 <- c(Labour = 0.634, Conservative = 0.250, LibDem = 0.070,
              UUP = 0.015, SNP = 0.009, PlaidCymru = 0.006,
              SDLP = 0.005, DUP = 0.003, SinnFein = 0.003,
@@ -98,6 +104,7 @@ plot(diversity_profile(uk_1997,      id = "UK 1997"))
 ![](partyscape_files/figure-html/different-parties-1.png)
 
 ``` r
+
 plot(diversity_profile(germany_2009, id = "Germany 2009"))
 ```
 

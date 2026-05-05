@@ -1,6 +1,7 @@
 # Alpha-beta-gamma diversity over time
 
 ``` r
+
 library(partyscape)
 ```
 
@@ -21,6 +22,7 @@ Two parties dominate (SPÖ, ÖVP) with steady shares across three decades.
 β should sit near 1 at every q.
 
 ``` r
+
 austria <- rbind(
   `1986` = c(SPOE = 0.437, OEVP = 0.421, FPOE = 0.098, Gruene = 0.044),
   `1990` = c(SPOE = 0.437, OEVP = 0.328, FPOE = 0.180, Gruene = 0.055),
@@ -46,6 +48,7 @@ order stays constant (this is what keeps identity); only the entries
 move. β₂ captures the swap.
 
 ``` r
+
 germany <- rbind(
   `2002` = c(CDU = 0.315, CSU = 0.096, SPD = 0.416,
              FDP = 0.078, Gruene = 0.091, Linke = 0.003),
@@ -78,6 +81,7 @@ because the pooled composition now averages “the k-th largest slot”
 across rows, not “the share of party X.”
 
 ``` r
+
 germany_sorted <- t(apply(germany, 1, sort, decreasing = TRUE))
 colnames(germany_sorted) <- paste0("Rank_", seq_len(ncol(germany_sorted)))
 alpha_beta_gamma(germany_sorted, q = c(0, 1, 2, 5),
@@ -104,6 +108,7 @@ auto-collapses via
 [`collapse_to_elections()`](https://mneunhoe.github.io/partyscape/reference/collapse_to_elections.md).
 
 ``` r
+
 germany_annual <- rbind(
   `2002` = germany["2002", ],
   `2003` = germany["2002", ],   # same composition

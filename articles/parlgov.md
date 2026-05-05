@@ -1,6 +1,7 @@
 # End-to-end with ParlGov data
 
 ``` r
+
 library(partyscape)
 ```
 
@@ -10,6 +11,7 @@ current `view_election` CSV and caches it in
 `tools::R_user_dir("partyscape", "cache")`.
 
 ``` r
+
 pg <- fetch_parlgov()
 head(pg[, c("country", "date", "party", "seats")])
 #>   country       date    party seats
@@ -32,6 +34,7 @@ first, not “the largest party that year.” This is what makes
 below actually detect changes in effective power structure.
 
 ``` r
+
 shares <- parlgov_seat_shares(pg,
                               countries = c("Netherlands", "Sweden"),
                               years     = 1960:2020,
@@ -43,6 +46,7 @@ dim(shares)
 ## Pillar 1 — diversity profiles for a handful of elections
 
 ``` r
+
 pick <- c("Netherlands_1982", "Sweden_2002")
 plot(diversity_profile(shares[rownames(shares) %in% pick, , drop = FALSE]))
 ```
@@ -52,6 +56,7 @@ plot(diversity_profile(shares[rownames(shares) %in% pick, , drop = FALSE]))
 ## Pillar 2 — crossings between the two pick elections
 
 ``` r
+
 cr <- crossings(shares["Netherlands_1982", ],
                 shares["Sweden_2002", ],
                 q = seq(0, 5, 0.01))
@@ -67,6 +72,7 @@ plot(cr)
 ## Pillar 3 — beta diversity of one country’s trajectory
 
 ``` r
+
 nl <- shares[attr(shares, "country") == "Netherlands", , drop = FALSE]
 yr <- attr(shares, "year")[attr(shares, "country") == "Netherlands"]
 plot(alpha_beta_gamma(nl, q = c(0, 1, 2, 5), years = yr))

@@ -18,10 +18,11 @@ Dataverse DOI `10.7910/DVN/Q0OIMY`) is required. Set
 additionally needs live ParlGov access through
 [`fetch_parlgov()`](https://mneunhoe.github.io/partyscape/reference/fetch_parlgov.md).
 Monte Carlo counts are reduced for vignette speed (the paper uses
-$n_{sim} = 500$; we default to $50$). Bump them back up to reproduce
-every reported digit exactly.
+$`n_\mathrm{sim} = 500`$; we default to $`50`$). Bump them back up to
+reproduce every reported digit exactly.
 
 ``` r
+
 library(partyscape)
 library(ggplot2)
 
@@ -39,11 +40,12 @@ cat(sprintf("Loaded %d country-years in %d countries (years %d-%d).\n",
 ## §1 What PCA on sorted compositional data rediscovers
 
 The paper’s headline: the first two PCs explain 87% of variance; Monte
-Carlo nulls (uniform Dirichlet, matched-$N_{0}$ Dirichlet,
+Carlo nulls (uniform Dirichlet, matched-$`N_0`$ Dirichlet,
 Taagepera–Allik Dirichlet) reproduce the qualitative loading shape,
 showing the eigenvectors are method-imposed, not substantive.
 
 ``` r
+
 pca_real      <- prcomp(X, center = TRUE, scale. = FALSE)
 real_var      <- summary(pca_real)$importance[2, 1:5] * 100
 round(real_var, 1)
@@ -56,6 +58,7 @@ cat(sprintf("PC1 + PC2 = %.1f%%\n", sum(real_var[1:2])))
 comes from the package; the rest is base R.
 
 ``` r
+
 n_sim    <- 50                 # bump to 500 for paper-exact numbers
 D        <- ncol(X)
 Ncy      <- nrow(X)
@@ -134,12 +137,13 @@ round(mc_diag[, -1], 3)
 ```
 
 Paper’s reference numbers: uniform null ≈ 60.3% / 18.6% variance,
-$|r| \approx 0.88$ (PC1) / $0.66$ (PC2); matched-$N_{0}$ and
+$`|r| \approx 0.88`$ (PC1) / $`0.66`$ (PC2); matched-$`N_0`$ and
 Taagepera–Allik nulls correlate near 1 with the real loadings.
 
 ### Figure 1 — loading envelopes
 
 ``` r
+
 df_fig1 <- data.frame()
 df_fig1 <- rbind(df_fig1, data.frame(
   party   = rep(1:D, 2),
@@ -178,9 +182,10 @@ ggplot(df_fig1, aes(party, loading, colour = source, fill = source)) +
 ## §2 PC1 and the effective number of parties
 
 Scalars come from `partyscape`. The Magyar columns are already sorted,
-so `X[, 1]` is $x_{(1)}$.
+so `X[, 1]` is $`x_{(1)}`$.
 
 ``` r
+
 hh_real  <- hhi(X)                    # HHI per row
 enp_real <- enp(X)                    # 1 / HHI
 z_top    <- X[, 1] + X[, 2]
@@ -198,6 +203,7 @@ c(R2_PC1_HH  = summary(lm(pc1 ~ hh_real))$r.squared,
 ### HH variance decomposition (§2.2)
 
 ``` r
+
 c(var_ztop2 = var(z_top^2 / 2),
   var_zgap2 = var(z_gap^2 / 2),
   var_tail  = var(tail_sq))           # paper: 0.0123 / 0.0005 / 0.0005
@@ -206,6 +212,7 @@ c(var_ztop2 = var(z_top^2 / 2),
 ### Closure constraint and sorting-induced variance concentration (§A3)
 
 ``` r
+
 cov_X  <- cov(X)
 cat(sprintf("max |rowSums(Sigma)| = %.3e  (closure)\n",
             max(abs(rowSums(cov_X)))))
@@ -217,10 +224,11 @@ cat(sprintf("Var(x_(1)) / total = %.3f  (paper: 0.453)\n",
 
 ### Two-dimensional sub-PCA (§2.2)
 
-Sub-PCA on $\left( z_{\text{top}},z_{\text{gap}} \right)$ alone predicts
-the full-PCA PC1 at $R^{2} = 0.991$ and PC2 at $R^{2} = 0.993$.
+Sub-PCA on $`(z_\text{top}, z_\text{gap})`$ alone predicts the full-PCA
+PC1 at $`R^2 = 0.991`$ and PC2 at $`R^2 = 0.993`$.
 
 ``` r
+
 Z     <- cbind(z_top, z_gap)
 pca_Z <- prcomp(Z, center = TRUE, scale. = FALSE)
 sub   <- pca_Z$x
@@ -234,9 +242,10 @@ c(R2_full_PC1_from_2D = r2_pc1_sub,
 
 ## §3 PC2 and the dominance gap
 
-### Σ₁₂ and the $(A,B,C)$ triple (§A4)
+### Σ₁₂ and the $`(A, B, C)`$ triple (§A4)
 
 ``` r
+
 S11 <- cov_X[1, 1]; S22 <- cov_X[2, 2]; S12 <- cov_X[1, 2]
 A_var <- S11 + 2 * S12 + S22          # Var(z_top)
 B_var <- S11 - 2 * S12 + S22          # Var(z_gap)
@@ -246,11 +255,13 @@ c(Sigma11 = S11, Sigma22 = S22, Sigma12 = S12,
   cor_top_gap = C_cov / sqrt(A_var * B_var)) |> round(5)
 ```
 
-The paper reports $\Sigma_{12} = + 0.00413$, $A = 0.0265$, $B = 0.010$.
+The paper reports $`\Sigma_{12} = +0.00413`$, $`A = 0.0265`$,
+$`B = 0.010`$.
 
-### Eigenvectors of $\Sigma_{Z}$ — $(0.96,0.28)$ and $( - 0.28,0.96)$
+### Eigenvectors of $`\Sigma_Z`$ — $`(0.96, 0.28)`$ and $`(-0.28, 0.96)`$
 
 ``` r
+
 eig <- eigen(cov(Z))
 V   <- eig$vectors
 # Sign-align so the heavy component of each eigenvector is positive
@@ -262,13 +273,14 @@ round(V, 3)
 round(eig$values, 5)
 ```
 
-### PC2 vs. the $N_{a}$ family (§3.2)
+### PC2 vs. the $`N_a`$ family (§3.2)
 
 [`hill_number()`](https://mneunhoe.github.io/partyscape/reference/hill_number.md)
-does the work; correlations should sit below 0.10 for $a \leq 3$ and
-rise to $\approx 0.20$ at $a = 10$.
+does the work; correlations should sit below 0.10 for $`a \le 3`$ and
+rise to $`\approx 0.20`$ at $`a = 10`$.
 
 ``` r
+
 pc2 <- pca_real$x[, 2]
 q_probe <- c(0, 0.5, 1, 1.5, 2, 3, 5, 10)
 Na_mat <- sapply(q_probe, function(q) apply(X, 1, hill_number, q = q))
@@ -281,13 +293,14 @@ cat(sprintf("cor(ENP, z_top)        = %.3f  (paper: 0.96)\n",
             cor(enp_real, z_top)))
 ```
 
-### Figure: $N_{a}$ level sets for a 3-party system
+### Figure: $`N_a`$ level sets for a 3-party system
 
 Every scalar on the plot is a
 [`hill_number()`](https://mneunhoe.github.io/partyscape/reference/hill_number.md)
 call.
 
 ``` r
+
 Na_3p <- function(x1, x2, a) hill_number(c(x1, x2, 1 - x1 - x2), a)
 
 x1_ref <- 0.45; x2_ref <- 0.30
@@ -323,6 +336,7 @@ ggplot(levels_df, aes(x1, x2, z = Na, colour = a)) +
 ## §4 Diversity profiles — UK 1997 vs. Germany 2009
 
 ``` r
+
 uk97  <- X["United Kingdom_1997", ]
 ger09 <- X["Germany_2009", ]
 
@@ -348,6 +362,7 @@ autoplot(dp_pair) +
 ### 16-country-year illustrative sample (§6 paragraph 1)
 
 ``` r
+
 q_fine  <- seq(0, 10, 0.02)
 all_enp <- enp(X)
 all_gap <- dominance_gap(X)
@@ -372,6 +387,7 @@ data.frame(country_year = rownames(X)[sel_16],
 ```
 
 ``` r
+
 M16    <- X[sel_16, , drop = FALSE]
 cr_16  <- crossings(M16, q = q_fine, method = "signchange")
 n_cross_16 <- sum(cr_16$pairs$n_crossings > 0)
@@ -383,6 +399,7 @@ cat(sprintf("16-CY sample: %d of %d pairs cross (%.1f%%)  [paper: 44/120 = 36.7%
 #### Table 1 — virtually-identical-ENP pairs
 
 ``` r
+
 tbl <- cr_16$pairs
 tbl$system_A <- rownames(M16)[tbl$i]
 tbl$system_B <- rownames(M16)[tbl$j]
@@ -407,6 +424,7 @@ head(cross_pairs[, c("system_A", "system_B", "N0_A", "N0_B",
 100 draws on a 4\$\$4 (ENP, gap) quartile grid.
 
 ``` r
+
 stratified_redraw_rate <- function(enp_vec, gap_vec, n_draws = 100,
                                    seed = 2026) {
   enp_q <- quantile(enp_vec, seq(0, 1, length.out = 5))
@@ -449,6 +467,7 @@ We compute the full profile matrix once with
 and pull the `wide` attribute for fast sign-change scanning.
 
 ``` r
+
 dp_full <- diversity_profile(X, q = q_fine)
 prof_mat <- attr(dp_full, "wide")
 
@@ -495,12 +514,13 @@ for (b in list(c(0, 0.05), c(0.05, 0.10), c(0.10, 0.15), c(0.15, 1))) {
 }
 ```
 
-Paper’s ladder: 52% → 79% across the $\left| \Delta z_{gap} \right|$
+Paper’s ladder: 52% → 79% across the $`|\Delta z_{\mathrm{gap}}|`$
 bands.
 
 ### France 2007 vs. Spain 2000 (sanity check)
 
 ``` r
+
 fr <- X["France_2007", ]; sp <- X["Spain_2000", ]
 cat(sprintf("France 2007: x(1)=%.4f x(2)=%.4f gap=%.4f N0=%d ENP=%.3f N_inf=%.3f\n",
             fr[1], fr[2], fr[1] - fr[2], sum(fr > 0), enp(fr), 1 / max(fr)))
@@ -519,6 +539,7 @@ Netherlands 1982 vs. Sweden 2002 (two crossings); UK 2005 vs. Greece
 uniform dominance).
 
 ``` r
+
 case_pairs <- list(
   c("Netherlands_1982",     "Sweden_2002"),
   c("United Kingdom_2005",  "Greece_2007"),
@@ -555,6 +576,7 @@ with `years = ...` auto-collapses repeated consecutive rows via
 and weights by term length.
 
 ``` r
+
 countries <- unique(dat$country)
 q_beta    <- c(0, 1, 2, 5)
 
@@ -583,6 +605,7 @@ knitr::kable(wide_sorted, digits = 3,
 Key countries cited in the text:
 
 ``` r
+
 for (cc in c("Greece", "Austria", "Italy", "Finland", "United Kingdom")) {
   row <- wide_sorted[wide_sorted$country == cc, ]
   cat(sprintf("  %-15s  beta_q0 = %.3f  beta_q2 = %.3f  beta_q5 = %.3f\n",
@@ -590,9 +613,10 @@ for (cc in c("Greece", "Austria", "Italy", "Finland", "United Kingdom")) {
 }
 ```
 
-Unit-test (disjoint communities should give $\beta_{2} = 2$):
+Unit-test (disjoint communities should give $`\beta_2 = 2`$):
 
 ``` r
+
 disjoint <- rbind(c(rep(0.1, 10), rep(0, 10)),
                   c(rep(0, 10), 0.75, 0.25, rep(0, 8)))
 tst <- alpha_beta_gamma(disjoint, q = 2)
@@ -604,6 +628,7 @@ cat(sprintf("Disjoint test: gamma=%.3f  alpha=%.3f  beta=%.3f  (expect 5.517, 2.
 ### Unsorted (ParlGov) representation
 
 ``` r
+
 parlgov_names <- c("Austria", "Belgium", "Denmark", "Finland", "France",
                    "Germany", "Greece", "Iceland", "Ireland", "Italy",
                    "Luxembourg", "Netherlands", "Norway", "Portugal",
@@ -643,6 +668,7 @@ dim(shares)
 ```
 
 ``` r
+
 country_vec <- attr(shares, "country")
 year_vec    <- attr(shares, "year")
 
@@ -671,15 +697,17 @@ knitr::kable(wide_pg, digits = 3,
 Italy’s headline numbers:
 
 ``` r
+
 beta_pg[beta_pg$country == "Italy", ]
 ```
 
-Paper reports $\beta_{0} = 3.87$, $\beta_{2} = 2.35$,
-$\beta_{5} = 2.09$.
+Paper reports $`\beta_0 = 3.87`$, $`\beta_2 = 2.35`$,
+$`\beta_5 = 2.09`$.
 
 ### Sorted-vs-unsorted gap at q = 2 (Figure 3c)
 
 ``` r
+
 cmp <- merge(beta_sorted[, c("country", "q", "beta")],
              beta_pg[,     c("country", "q", "beta")],
              by = c("country", "q"),
@@ -705,6 +733,7 @@ ggplot(cmp_q2) +
 ### Continuous β(q) profile (Figure 4)
 
 ``` r
+
 q_grid <- seq(0, 5, 0.1)
 
 profile_one <- function(mat, years) {
@@ -750,22 +779,22 @@ ggplot(bp, aes(q, beta, group = country, colour = colour)) +
 
 ## Summary of what’s replicated
 
-| Paper section | Key claim                                                               | Replicated via                                                                                                                                                                                                                                                                                                                                                                               |
-|:--------------|:------------------------------------------------------------------------|:---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| §1            | PC1/PC2 variance = 70.6% / 16.5%                                        | [`prcomp()`](https://rdrr.io/r/stats/prcomp.html)                                                                                                                                                                                                                                                                                                                                            |
-| §1            | Three Monte Carlo nulls, $|r|$ with real loadings                       | [`taagepera_allik_shares()`](https://mneunhoe.github.io/partyscape/reference/taagepera_allik_shares.md) + [`prcomp()`](https://rdrr.io/r/stats/prcomp.html)                                                                                                                                                                                                                                  |
-| §2            | $R^{2}\left( \text{PC1},\text{HH} \right) = 0.96$; $(A,B,C)$ triple     | [`hhi()`](https://mneunhoe.github.io/partyscape/reference/hhi.md), [`enp()`](https://mneunhoe.github.io/partyscape/reference/enp.md) + [`lm()`](https://rdrr.io/r/stats/lm.html)                                                                                                                                                                                                             |
-| §2            | 2×2 sub-PCA predicts full PC1 at $R^{2} = 0.991$                        | [`prcomp()`](https://rdrr.io/r/stats/prcomp.html) on $\left( z_{\text{top}},z_{\text{gap}} \right)$                                                                                                                                                                                                                                                                                          |
-| §3            | $\left| r\left( \text{PC2},N_{a} \right) \right| < 0.10$ for $a \leq 3$ | [`hill_number()`](https://mneunhoe.github.io/partyscape/reference/hill_number.md)                                                                                                                                                                                                                                                                                                            |
-| §3            | $R^{2}\left( \text{PC2},\text{gap} \right) \approx 0.96$                | [`dominance_gap()`](https://mneunhoe.github.io/partyscape/reference/dominance_gap.md) + [`lm()`](https://rdrr.io/r/stats/lm.html)                                                                                                                                                                                                                                                            |
-| §4            | UK 1997 / Germany 2009 anchor values                                    | [`diversity_profile()`](https://mneunhoe.github.io/partyscape/reference/diversity_profile.md), [`hill_number()`](https://mneunhoe.github.io/partyscape/reference/hill_number.md), [`enp()`](https://mneunhoe.github.io/partyscape/reference/enp.md), scalars                                                                                                                                 |
-| §6            | 16-CY crossing rate ≈ 37%                                               | [`crossings()`](https://mneunhoe.github.io/partyscape/reference/crossings.md)                                                                                                                                                                                                                                                                                                                |
-| §6            | Stratified-redraw 22–44%                                                | [`crossings()`](https://mneunhoe.github.io/partyscape/reference/crossings.md)                                                                                                                                                                                                                                                                                                                |
-| §6            | Full-dataset scan: 66% crossing, ${\bar{q}}_{1} \approx 1.98$           | [`diversity_profile()`](https://mneunhoe.github.io/partyscape/reference/diversity_profile.md) + sign-change scan                                                                                                                                                                                                                                                                             |
-| §6            | France/Spain, NL/SE, UK/GR, IT/PT case pairs                            | [`crossings()`](https://mneunhoe.github.io/partyscape/reference/crossings.md)                                                                                                                                                                                                                                                                                                                |
-| §7            | Per-country $\beta$ at $q \in \{ 0,1,2,5\}$, sorted + unsorted          | [`alpha_beta_gamma()`](https://mneunhoe.github.io/partyscape/reference/alpha_beta_gamma.md), [`collapse_to_elections()`](https://mneunhoe.github.io/partyscape/reference/collapse_to_elections.md), [`fetch_parlgov()`](https://mneunhoe.github.io/partyscape/reference/fetch_parlgov.md), [`parlgov_seat_shares()`](https://mneunhoe.github.io/partyscape/reference/parlgov_seat_shares.md) |
-| §7            | Italy $\beta_{0} = 3.87$, $\beta_{2} = 2.35$, $\beta_{5} = 2.09$        | [`alpha_beta_gamma()`](https://mneunhoe.github.io/partyscape/reference/alpha_beta_gamma.md) on ParlGov                                                                                                                                                                                                                                                                                       |
-| §7            | Sorted $\leq$ unsorted at every $q$                                     | same                                                                                                                                                                                                                                                                                                                                                                                         |
-| §7            | Disjoint-communities sanity: $\beta_{2} = 2$                            | [`alpha_beta_gamma()`](https://mneunhoe.github.io/partyscape/reference/alpha_beta_gamma.md)                                                                                                                                                                                                                                                                                                  |
+| Paper section | Key claim | Replicated via |
+|:---|:---|:---|
+| §1 | PC1/PC2 variance = 70.6% / 16.5% | [`prcomp()`](https://rdrr.io/r/stats/prcomp.html) |
+| §1 | Three Monte Carlo nulls, $`|r|`$ with real loadings | [`taagepera_allik_shares()`](https://mneunhoe.github.io/partyscape/reference/taagepera_allik_shares.md) + [`prcomp()`](https://rdrr.io/r/stats/prcomp.html) |
+| §2 | $`R^2(\text{PC1}, \text{HH}) = 0.96`$; $`(A, B, C)`$ triple | [`hhi()`](https://mneunhoe.github.io/partyscape/reference/hhi.md), [`enp()`](https://mneunhoe.github.io/partyscape/reference/enp.md) + [`lm()`](https://rdrr.io/r/stats/lm.html) |
+| §2 | 2×2 sub-PCA predicts full PC1 at $`R^2 = 0.991`$ | [`prcomp()`](https://rdrr.io/r/stats/prcomp.html) on $`(z_\text{top}, z_\text{gap})`$ |
+| §3 | $`|r(\text{PC2}, N_a)| < 0.10`$ for $`a \le 3`$ | [`hill_number()`](https://mneunhoe.github.io/partyscape/reference/hill_number.md) |
+| §3 | $`R^2(\text{PC2}, \text{gap}) \approx 0.96`$ | [`dominance_gap()`](https://mneunhoe.github.io/partyscape/reference/dominance_gap.md) + [`lm()`](https://rdrr.io/r/stats/lm.html) |
+| §4 | UK 1997 / Germany 2009 anchor values | [`diversity_profile()`](https://mneunhoe.github.io/partyscape/reference/diversity_profile.md), [`hill_number()`](https://mneunhoe.github.io/partyscape/reference/hill_number.md), [`enp()`](https://mneunhoe.github.io/partyscape/reference/enp.md), scalars |
+| §6 | 16-CY crossing rate ≈ 37% | [`crossings()`](https://mneunhoe.github.io/partyscape/reference/crossings.md) |
+| §6 | Stratified-redraw 22–44% | [`crossings()`](https://mneunhoe.github.io/partyscape/reference/crossings.md) |
+| §6 | Full-dataset scan: 66% crossing, $`\bar{q}_1 \approx 1.98`$ | [`diversity_profile()`](https://mneunhoe.github.io/partyscape/reference/diversity_profile.md) + sign-change scan |
+| §6 | France/Spain, NL/SE, UK/GR, IT/PT case pairs | [`crossings()`](https://mneunhoe.github.io/partyscape/reference/crossings.md) |
+| §7 | Per-country $`\beta`$ at $`q \in \{0,1,2,5\}`$, sorted + unsorted | [`alpha_beta_gamma()`](https://mneunhoe.github.io/partyscape/reference/alpha_beta_gamma.md), [`collapse_to_elections()`](https://mneunhoe.github.io/partyscape/reference/collapse_to_elections.md), [`fetch_parlgov()`](https://mneunhoe.github.io/partyscape/reference/fetch_parlgov.md), [`parlgov_seat_shares()`](https://mneunhoe.github.io/partyscape/reference/parlgov_seat_shares.md) |
+| §7 | Italy $`\beta_0 = 3.87`$, $`\beta_2 = 2.35`$, $`\beta_5 = 2.09`$ | [`alpha_beta_gamma()`](https://mneunhoe.github.io/partyscape/reference/alpha_beta_gamma.md) on ParlGov |
+| §7 | Sorted $`\le`$ unsorted at every $`q`$ | same |
+| §7 | Disjoint-communities sanity: $`\beta_2 = 2`$ | [`alpha_beta_gamma()`](https://mneunhoe.github.io/partyscape/reference/alpha_beta_gamma.md) |
 
 For paper-exact headline numbers, bump `n_sim` back to 500 in §1.

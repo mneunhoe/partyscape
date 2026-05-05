@@ -209,7 +209,7 @@ rest is base R.</p>
 <span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">round</a></span><span class="op">(</span><span class="va">mc_diag</span><span class="op">[</span>, <span class="op">-</span><span class="fl">1</span><span class="op">]</span>, <span class="fl">3</span><span class="op">)</span></span></code></pre></div>
 <p>Paper’s reference numbers: uniform null ≈ 60.3% / 18.6% variance,
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mrow><mo stretchy="true" form="prefix">|</mo><mi>r</mi><mo stretchy="true" form="postfix">|</mo></mrow><mo>≈</mo><mn>0.88</mn></mrow><annotation encoding="application/x-tex">|r| \approx 0.88</annotation></semantics></math>
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="false" form="prefix">|</mo><mi>r</mi><mo stretchy="false" form="prefix">|</mo><mo>≈</mo><mn>0.88</mn></mrow><annotation encoding="application/x-tex">|r| \approx 0.88</annotation></semantics></math>
 (PC1) /
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mn>0.66</mn><annotation encoding="application/x-tex">0.66</annotation></semantics></math>
 (PC2);
@@ -260,7 +260,7 @@ and Taagepera–Allik nulls correlate near 1 with the real loadings.</p>
 </h2>
 <p>Scalars come from <code>partyscape</code>. The Magyar columns are
 already sorted, so <code>X[, 1]</code> is
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>x</mi><mrow><mo stretchy="true" form="prefix">(</mo><mn>1</mn><mo stretchy="true" form="postfix">)</mo></mrow></msub><annotation encoding="application/x-tex">x_{(1)}</annotation></semantics></math>.</p>
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>x</mi><mrow><mo stretchy="false" form="prefix">(</mo><mn>1</mn><mo stretchy="false" form="postfix">)</mo></mrow></msub><annotation encoding="application/x-tex">x_{(1)}</annotation></semantics></math>.</p>
 <div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">hh_real</span>  <span class="op">&lt;-</span> <span class="fu"><a href="../reference/hhi.html">hhi</a></span><span class="op">(</span><span class="va">X</span><span class="op">)</span>                    <span class="co"># HHI per row</span></span>
 <span><span class="va">enp_real</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/enp.html">enp</a></span><span class="op">(</span><span class="va">X</span><span class="op">)</span>                    <span class="co"># 1 / HHI</span></span>
@@ -299,7 +299,7 @@ already sorted, so <code>X[, 1]</code> is
 <h3 id="two-dimensional-sub-pca-2-2">Two-dimensional sub-PCA (§2.2)<a class="anchor" aria-label="anchor" href="#two-dimensional-sub-pca-2-2"></a>
 </h3>
 <p>Sub-PCA on
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="true" form="prefix">(</mo><msub><mi>z</mi><mtext mathvariant="normal">top</mtext></msub><mo>,</mo><msub><mi>z</mi><mtext mathvariant="normal">gap</mtext></msub><mo stretchy="true" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">(z_\text{top}, z_\text{gap})</annotation></semantics></math>
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="false" form="prefix">(</mo><msub><mi>z</mi><mtext mathvariant="normal">top</mtext></msub><mo>,</mo><msub><mi>z</mi><mtext mathvariant="normal">gap</mtext></msub><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">(z_\text{top}, z_\text{gap})</annotation></semantics></math>
 alone predicts the full-PCA PC1 at
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msup><mi>R</mi><mn>2</mn></msup><mo>=</mo><mn>0.991</mn></mrow><annotation encoding="application/x-tex">R^2 = 0.991</annotation></semantics></math>
 and PC2 at
@@ -321,7 +321,7 @@ and PC2 at
 </h2>
 <div class="section level3">
 <h3 id="σ₁₂-and-the-a-b-c-triple-a4">Σ₁₂ and the
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="true" form="prefix">(</mo><mi>A</mi><mo>,</mo><mi>B</mi><mo>,</mo><mi>C</mi><mo stretchy="true" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">(A, B, C)</annotation></semantics></math>
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="false" form="prefix">(</mo><mi>A</mi><mo>,</mo><mi>B</mi><mo>,</mo><mi>C</mi><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">(A, B, C)</annotation></semantics></math>
 triple (§A4)<a class="anchor" aria-label="anchor" href="#%CF%83%E2%82%81%E2%82%82-and-the-a-b-c-triple-a4"></a>
 </h3>
 <div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
@@ -333,17 +333,17 @@ triple (§A4)<a class="anchor" aria-label="anchor" href="#%CF%83%E2%82%81%E2%82%
 <span>  A <span class="op">=</span> <span class="va">A_var</span>, B <span class="op">=</span> <span class="va">B_var</span>, C <span class="op">=</span> <span class="va">C_cov</span>,</span>
 <span>  cor_top_gap <span class="op">=</span> <span class="va">C_cov</span> <span class="op">/</span> <span class="fu"><a href="https://rdrr.io/r/base/MathFun.html" class="external-link">sqrt</a></span><span class="op">(</span><span class="va">A_var</span> <span class="op">*</span> <span class="va">B_var</span><span class="op">)</span><span class="op">)</span> <span class="op">|&gt;</span> <span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">round</a></span><span class="op">(</span><span class="fl">5</span><span class="op">)</span></span></code></pre></div>
 <p>The paper reports
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>Σ</mi><mn>12</mn></msub><mo>=</mo><mo>+</mo><mn>0.00413</mn></mrow><annotation encoding="application/x-tex">\Sigma_{12} = +0.00413</annotation></semantics></math>,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi mathvariant="normal">Σ</mi><mn>12</mn></msub><mo>=</mo><mi>+</mi><mn>0.00413</mn></mrow><annotation encoding="application/x-tex">\Sigma_{12} = +0.00413</annotation></semantics></math>,
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>A</mi><mo>=</mo><mn>0.0265</mn></mrow><annotation encoding="application/x-tex">A = 0.0265</annotation></semantics></math>,
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>B</mi><mo>=</mo><mn>0.010</mn></mrow><annotation encoding="application/x-tex">B = 0.010</annotation></semantics></math>.</p>
 </div>
 <div class="section level3">
 <h3 id="eigenvectors-of-sigma_z-0-96-0-28-and--0-28-0-96">Eigenvectors of
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>Σ</mi><mi>Z</mi></msub><annotation encoding="application/x-tex">\Sigma_Z</annotation></semantics></math>
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi mathvariant="normal">Σ</mi><mi>Z</mi></msub><annotation encoding="application/x-tex">\Sigma_Z</annotation></semantics></math>
 —
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="true" form="prefix">(</mo><mn>0.96</mn><mo>,</mo><mn>0.28</mn><mo stretchy="true" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">(0.96, 0.28)</annotation></semantics></math>
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="false" form="prefix">(</mo><mn>0.96</mn><mo>,</mo><mn>0.28</mn><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">(0.96, 0.28)</annotation></semantics></math>
 and
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="true" form="prefix">(</mo><mo>−</mo><mn>0.28</mn><mo>,</mo><mn>0.96</mn><mo stretchy="true" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">(-0.28, 0.96)</annotation></semantics></math><a class="anchor" aria-label="anchor" href="#eigenvectors-of-sigma_z-0-96-0-28-and--0-28-0-96"></a>
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="false" form="prefix">(</mo><mi>−</mi><mn>0.28</mn><mo>,</mo><mn>0.96</mn><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">(-0.28, 0.96)</annotation></semantics></math><a class="anchor" aria-label="anchor" href="#eigenvectors-of-sigma_z-0-96-0-28-and--0-28-0-96"></a>
 </h3>
 <div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">eig</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/eigen.html" class="external-link">eigen</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/stats/cor.html" class="external-link">cov</a></span><span class="op">(</span><span class="va">Z</span><span class="op">)</span><span class="op">)</span></span>
@@ -590,7 +590,7 @@ attribute for fast sign-change scanning.</p>
 <span>              <span class="va">b</span><span class="op">[</span><span class="fl">1</span><span class="op">]</span>, <span class="va">b</span><span class="op">[</span><span class="fl">2</span><span class="op">]</span>, <span class="fu"><a href="https://rdrr.io/r/base/sum.html" class="external-link">sum</a></span><span class="op">(</span><span class="va">m</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/base/mean.html" class="external-link">mean</a></span><span class="op">(</span><span class="va">pairs_df</span><span class="op">$</span><span class="va">n_cross</span><span class="op">[</span><span class="va">m</span><span class="op">]</span> <span class="op">&gt;</span> <span class="fl">0</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="op">}</span></span></code></pre></div>
 <p>Paper’s ladder: 52% → 79% across the
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="true" form="prefix">|</mo><mi>Δ</mi><msub><mi>z</mi><mrow><mi mathvariant="normal">g</mi><mi mathvariant="normal">a</mi><mi mathvariant="normal">p</mi></mrow></msub><mo stretchy="true" form="postfix">|</mo></mrow><annotation encoding="application/x-tex">|\Delta z_{\mathrm{gap}}|</annotation></semantics></math>
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="false" form="prefix">|</mo><mi mathvariant="normal">Δ</mi><msub><mi>z</mi><mrow><mi mathvariant="normal">g</mi><mi mathvariant="normal">a</mi><mi mathvariant="normal">p</mi></mrow></msub><mo stretchy="false" form="prefix">|</mo></mrow><annotation encoding="application/x-tex">|\Delta z_{\mathrm{gap}}|</annotation></semantics></math>
 bands.</p>
 </div>
 <div class="section level3">
@@ -857,7 +857,7 @@ auto-collapses repeated consecutive rows via
 <tr class="even">
 <td align="left">§1</td>
 <td align="left">Three Monte Carlo nulls,
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="true" form="prefix">|</mo><mi>r</mi><mo stretchy="true" form="postfix">|</mo></mrow><annotation encoding="application/x-tex">|r|</annotation></semantics></math>
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="false" form="prefix">|</mo><mi>r</mi><mo stretchy="false" form="prefix">|</mo></mrow><annotation encoding="application/x-tex">|r|</annotation></semantics></math>
 with real loadings</td>
 <td align="left">
 <code><a href="../reference/taagepera_allik_shares.html">taagepera_allik_shares()</a></code> +
@@ -867,8 +867,8 @@ with real loadings</td>
 <tr class="odd">
 <td align="left">§2</td>
 <td align="left">
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msup><mi>R</mi><mn>2</mn></msup><mrow><mo stretchy="true" form="prefix">(</mo><mtext mathvariant="normal">PC1</mtext><mo>,</mo><mtext mathvariant="normal">HH</mtext><mo stretchy="true" form="postfix">)</mo></mrow><mo>=</mo><mn>0.96</mn></mrow><annotation encoding="application/x-tex">R^2(\text{PC1}, \text{HH}) = 0.96</annotation></semantics></math>;
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="true" form="prefix">(</mo><mi>A</mi><mo>,</mo><mi>B</mi><mo>,</mo><mi>C</mi><mo stretchy="true" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">(A, B, C)</annotation></semantics></math>
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msup><mi>R</mi><mn>2</mn></msup><mo stretchy="false" form="prefix">(</mo><mtext mathvariant="normal">PC1</mtext><mo>,</mo><mtext mathvariant="normal">HH</mtext><mo stretchy="false" form="postfix">)</mo><mo>=</mo><mn>0.96</mn></mrow><annotation encoding="application/x-tex">R^2(\text{PC1}, \text{HH}) = 0.96</annotation></semantics></math>;
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="false" form="prefix">(</mo><mi>A</mi><mo>,</mo><mi>B</mi><mo>,</mo><mi>C</mi><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">(A, B, C)</annotation></semantics></math>
 triple</td>
 <td align="left">
 <code><a href="../reference/hhi.html">hhi()</a></code>, <code><a href="../reference/enp.html">enp()</a></code> +
@@ -882,13 +882,13 @@ triple</td>
 </td>
 <td align="left">
 <code><a href="https://rdrr.io/r/stats/prcomp.html" class="external-link">prcomp()</a></code> on
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="true" form="prefix">(</mo><msub><mi>z</mi><mtext mathvariant="normal">top</mtext></msub><mo>,</mo><msub><mi>z</mi><mtext mathvariant="normal">gap</mtext></msub><mo stretchy="true" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">(z_\text{top}, z_\text{gap})</annotation></semantics></math>
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="false" form="prefix">(</mo><msub><mi>z</mi><mtext mathvariant="normal">top</mtext></msub><mo>,</mo><msub><mi>z</mi><mtext mathvariant="normal">gap</mtext></msub><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">(z_\text{top}, z_\text{gap})</annotation></semantics></math>
 </td>
 </tr>
 <tr class="odd">
 <td align="left">§3</td>
 <td align="left">
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mrow><mo stretchy="true" form="prefix">|</mo><mi>r</mi><mrow><mo stretchy="true" form="prefix">(</mo><mtext mathvariant="normal">PC2</mtext><mo>,</mo><msub><mi>N</mi><mi>a</mi></msub><mo stretchy="true" form="postfix">)</mo></mrow><mo stretchy="true" form="postfix">|</mo></mrow><mo>&lt;</mo><mn>0.10</mn></mrow><annotation encoding="application/x-tex">|r(\text{PC2}, N_a)| &lt; 0.10</annotation></semantics></math>
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="false" form="prefix">|</mo><mi>r</mi><mo stretchy="false" form="prefix">(</mo><mtext mathvariant="normal">PC2</mtext><mo>,</mo><msub><mi>N</mi><mi>a</mi></msub><mo stretchy="false" form="postfix">)</mo><mo stretchy="false" form="prefix">|</mo><mo>&lt;</mo><mn>0.10</mn></mrow><annotation encoding="application/x-tex">|r(\text{PC2}, N_a)| &lt; 0.10</annotation></semantics></math>
 for
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>a</mi><mo>≤</mo><mn>3</mn></mrow><annotation encoding="application/x-tex">a \le 3</annotation></semantics></math>
 </td>
@@ -896,7 +896,7 @@ for
 </tr>
 <tr class="even">
 <td align="left">§3</td>
-<td align="left"><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msup><mi>R</mi><mn>2</mn></msup><mrow><mo stretchy="true" form="prefix">(</mo><mtext mathvariant="normal">PC2</mtext><mo>,</mo><mtext mathvariant="normal">gap</mtext><mo stretchy="true" form="postfix">)</mo></mrow><mo>≈</mo><mn>0.96</mn></mrow><annotation encoding="application/x-tex">R^2(\text{PC2}, \text{gap}) \approx 0.96</annotation></semantics></math></td>
+<td align="left"><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msup><mi>R</mi><mn>2</mn></msup><mo stretchy="false" form="prefix">(</mo><mtext mathvariant="normal">PC2</mtext><mo>,</mo><mtext mathvariant="normal">gap</mtext><mo stretchy="false" form="postfix">)</mo><mo>≈</mo><mn>0.96</mn></mrow><annotation encoding="application/x-tex">R^2(\text{PC2}, \text{gap}) \approx 0.96</annotation></semantics></math></td>
 <td align="left">
 <code><a href="../reference/dominance_gap.html">dominance_gap()</a></code> + <code><a href="https://rdrr.io/r/stats/lm.html" class="external-link">lm()</a></code>
 </td>
