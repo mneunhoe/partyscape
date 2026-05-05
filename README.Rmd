@@ -16,8 +16,7 @@ knitr::opts_chunk$set(
 # partyscape <img src="man/figures/logo.png" align="right" height="138" alt="partyscape hex logo" />
 
 Diversity profiles, profile crossings, and beta diversity for
-party-system research. Implements the three analytical tools proposed in
-Neunhoeffer (forthcoming) on a small, tidyverse-free footprint.
+party-system research. Implements the three analytical tools proposed in "Diversity Profiles for Party Systems" (Neunhoeffer, Under Review).
 
 ## Installation
 
